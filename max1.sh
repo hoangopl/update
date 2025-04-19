@@ -1,24 +1,23 @@
 #!/data/data/com.termux/files/usr/bin/bash
+url="https://raw.githubusercontent.com/hoangopl/update/main/max1.sh"
+script_path="$(realpath "$0")"
+tmp_file="/storage/emulated/0/Download/new_script.sh"
+curl -s "$url" -o "$tmp_file" || {
+    echo "Không thể tải script mới."
+    exit 1
+}
+if ! cmp -s "$tmp_file" "$script_path"; then
+    echo "Đã phát hiện bản cập nhật. Tiến hành cập nhật..."
+    mv "$tmp_file" "$script_path"
+    chmod +x "$script_path"
+    echo "Cập nhật thành công!"
+else
+    echo "Script đã là bản mới nhất."
+    rm "$tmp_file"
+fi
 cmd notification post -S bigtext -t 'CHẾ ĐỘ:BẬT' 'Tag' 'ANTIBAN FREE FIRE' > /dev/null 2>&1
 iptables -F OUTPUT
 iptables -F INPUT
-ACCEPT_IPS=(
- "202.81.119.2" "202.81.97.157" "202.81.99.15" "103.108.103.28" "202.81.112.209" "202.81.97.165" "202.81.99.1"
- "202.81.119.12" "202.81.97.161" "202.81.97.164" "202.81.99.7" "202.81.97.159" "202.81.119.1" "202.81.99.16"
- "202.81.119.11" "202.81.97.162" "202.81.119.3" "202.81.99.18" "202.81.99.5" "202.81.99.2" "202.81.99.3"
- "202.81.119.9"
-)
-ACCEPT_PORTS=(443 39698)
-echo "Đang cho phép các IP: ${#ACCEPT_IPS[@]} trên các cổng: ${ACCEPT_PORTS[*]}"
-for ip in "${ACCEPT_IPS[@]}"; do
-  for port in "${ACCEPT_PORTS[@]}"; do
-    iptables -A OUTPUT -p tcp -d "$ip" --dport "$port" -j ACCEPT
-    iptables -A INPUT -p tcp -s "$ip" --sport "$port" -j ACCEPT
-    iptables -A OUTPUT -p udp -d "$ip" --dport "$port" -j ACCEPT
-    iptables -A INPUT -p udp -s "$ip" --sport "$port" -j ACCEPT
-    echo "Đã cho phép $ip cổng $port (TCP & UDP)"
-  done
-done
 IP_LIST=(
   "3.162.51.124" "3.162.51.181" "3.162.51.39" "3.162.51.77" "3.162.58.112"
   "3.162.58.119" "3.162.58.73" "3.162.58.80" "3.162.58.98" "3.165.92.124"
@@ -113,18 +112,14 @@ ACCEPT_PORTS=(443 39698)
 echo -n "bật chế độ antiban trong trận đấu ? (yes/no): "
 read confirm
 if [[ "${confirm}" == "yes" ]]; then
-  echo "Đang chặn lại các IP đã cho phép..."
+  echo "Đang chặn các IP đã cho phép..."
   for ip in "${ACCEPT_IPS[@]}"; do
     for port in "${ACCEPT_PORTS[@]}"; do
-      iptables -D OUTPUT -p tcp -d "$ip" --dport "$port" -j DROP 2>/dev/null
-      iptables -D INPUT -p tcp -s "$ip" --sport "$port" -j DROP 2>/dev/null
-      iptables -D OUTPUT -p udp -d "$ip" --dport "$port" -j DROP 2>/dev/null
-      iptables -D INPUT -p udp -s "$ip" --sport "$port" -j DROP 2>/dev/null
       iptables -A OUTPUT -p tcp -d "$ip" --dport "$port" -j DROP
       iptables -A INPUT -p tcp -s "$ip" --sport "$port" -j DROP
       iptables -A OUTPUT -p udp -d "$ip" --dport "$port" -j DROP
       iptables -A INPUT -p udp -s "$ip" --sport "$port" -j DROP
-      echo "Đã chặn lại $ip cổng $port"
+      echo "Đã chặn $ip cổng $port"
     done
   done
   echo "Hoàn tất chặn lại IP đã cho phép."
