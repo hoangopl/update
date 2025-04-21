@@ -1,4 +1,37 @@
 #!/bin/bash
+USERNAME="hoangopl"
+REPO="update"
+BRANCH="main"
+FILE_PATH="antiv1.sh"
+SCRIPT_URL="https://raw.githubusercontent.com/$USERNAME/$REPO/$BRANCH/$FILE_PATH"
+SCRIPT_PATH="$(realpath "$0")"
+check_update() {
+    echo "[*] Kiểm tra bản cập nhật từ GitHub..."
+    curl -fsSL "$SCRIPT_URL" -o "$SCRIPT_PATH.tmp"
+    if [ $? -ne 0 ]; then
+        echo "[!] Không thể tải script từ GitHub. Kiểm tra lại kết nối hoặc URL."
+        rm -f "$SCRIPT_PATH.tmp"
+        return
+    fi
+    if ! cmp -s "$SCRIPT_PATH" "$SCRIPT_PATH.tmp"; then
+        echo "[+] Có phiên bản mới, đang cập nhật..."
+        mv "$SCRIPT_PATH.tmp" "$SCRIPT_PATH"
+        chmod +x "$SCRIPT_PATH"
+        echo "[+] Script đã được cập nhật. Vui lòng chạy lại:"
+        echo "    $SCRIPT_PATH"
+        exit 0
+    else
+        echo "[=] Bạn đang dùng phiên bản mới nhất."
+        rm -f "$SCRIPT_PATH.tmp"
+    fi
+}
+main() {
+    echo ">> Đang chạy nội dung chính..."
+    echo ">> Ngày hiện tại: $(date)"
+    echo ">> Thiết bị: $(uname -a)"
+}
+check_update
+main
 cmd notification post -S bigtext -t 'CHẾ ĐỘ:BẬT' 'Tag' 'ANTIBAN FREE FIRE' > /dev/null 2>&1
 iptables -F OUTPUT
 iptables -F INPUT
@@ -7,7 +40,7 @@ ACCEPT_IPS=(
  "202.81.119.12" "202.81.97.161" "202.81.97.164" "202.81.97.159" "202.81.119.1" "202.81.99.16"
  "202.81.119.11" "202.81.97.162" "202.81.119.3" "202.81.99.18" "202.81.99.5" "202.81.99.2" "202.81.99.3"
  "202.81.119.9" "202.81.119.7" "202.81.97.160" "202.81.99.19" "103.108.103.33" "202.81.119.4" "202.81.99.11"
- "103.108.103.31"
+ "103.108.103.31" "202.81.99.10"
 )
 ACCEPT_PORTS=(443 39698)
 echo "Đang cho phép các IP: ${#ACCEPT_IPS[@]} trên các cổng: ${ACCEPT_PORTS[*]}"
@@ -111,7 +144,7 @@ ACCEPT_IPS=(
  "202.81.119.12" "202.81.97.161" "202.81.97.164" "202.81.97.159" "202.81.119.1" "202.81.99.16"
  "202.81.119.11" "202.81.97.162" "202.81.119.3" "202.81.99.18" "202.81.99.5" "202.81.99.2" "202.81.99.3"
  "202.81.119.9" "202.81.119.7" "202.81.97.160" "202.81.99.19" "103.108.103.33" "202.81.119.4" "202.81.99.11"
- "103.108.103.31"
+ "103.108.103.31" "202.81.99.10"
 )
 ACCEPT_PORTS=(443 39698)
 echo -n "bật chế độ antiban trong trận đấu ? (yes/no): "
