@@ -27,11 +27,15 @@ check_update() {
 }
 main() {
     echo ">> Đang chạy nội dung chính..."
-    echo ">> Ngày hiện tại: $(date)"
-    echo ">> Thiết bị: $(uname -a)"
+    echo ">> Ngày hiện tại: $(date "+%Y-%m-%d")"
+    echo ">> thời gian hiện tại: $(date "+%H:%M:%S")"
+    echo ">> Thiết bị: $(getprop ro.product.manufacturer)"
+    echo ">> model: $(getprop ro.product.model)"
 }
 check_update
 main
+pm disable-user --user 0 com.google.android.gms
+pm disable-user --user 0 com.android.vending
 cmd notification post -S bigtext -t 'CHẾ ĐỘ:BẬT' 'Tag' 'ANTIBAN FREE FIRE' > /dev/null 2>&1
 iptables -F OUTPUT
 iptables -F INPUT
