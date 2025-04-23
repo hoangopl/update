@@ -150,7 +150,7 @@ ACCEPT_IPS=(
  "202.81.119.9" "202.81.119.7" "202.81.97.160" "202.81.99.19" "202.81.119.4" "202.81.99.11"
  "202.81.99.10"
 )
-ACCEPT_PORTS=(443 39698)
+ACCEPT_PORTS=(443)
 echo -n "bật chế độ antiban trong trận đấu ? (yes/no): "
 read confirm
 if [[ "${confirm}" == "yes" ]]; then
