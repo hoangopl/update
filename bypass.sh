@@ -2,7 +2,7 @@
 USERNAME="hoangopl"
 REPO="update"
 BRANCH="main"
-FILE_PATH="antiv1.sh"
+FILE_PATH="bypass.sh"
 SCRIPT_URL="https://raw.githubusercontent.com/$USERNAME/$REPO/$BRANCH/$FILE_PATH"
 SCRIPT_PATH="$(realpath "$0")"
 check_update() {
