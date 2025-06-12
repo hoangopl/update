@@ -27,27 +27,10 @@ sed -i '/ro.hardware/d' "$BUILD_PROP"
 sed -i '/ro.kernel.qemu/d' "$BUILD_PROP"
 sed -i '/qemu.hw.mainkeys/d' "$BUILD_PROP"
 export PATH=$(echo "$PATH" | sed 's:/system/xbin::g' | sed 's:/system/bin::g')
-alias su='echo su: not found'
-alias which='echo not found'
-alias busybox='echo busybox: not found'
-alias id='echo uid=2000(shell) gid=2000(shell)'
-alias whoami='echo shell'
-alias uname='echo Linux'
-alias lsmod='echo ""'
-alias find='/bin/true'
-alias dmesg='echo permission denied'
-alias getenforce='echo Enforcing'
-alias getprop='getprop | grep -vE "root|magisk|zygisk|test-keys|xposed|frida|debuggable"'
-alias mount='mount | grep -vE "magisk|overlay|tmpfs|xposed|frida"'
-alias ps='ps -A | grep -vE "magisk|zygisk|frida|xposed|zygote|su|debuggerd"'
-alias top='top -n 1 | grep -vE "magisk|zygisk|frida|xposed|zygote|su"'
-alias logcat='logcat | grep -vE "magisk|zygisk|frida|xposed|root|su|tamper|cheat"'
-alias pm='pm list packages | grep -vE "magisk|xposed|zygisk|frida|root|superuser"'
-alias traceroute='echo traceroute: not found'
-alias strace='echo strace: not found'
-alias lsof='echo lsof: not found'
-alias ls='ls --hide=*magisk* --hide=*zygisk* --hide=*frida* --hide=*xposed* --hide=*su*'
-alias tree='tree -I "*magisk*|*zygisk*|*xposed*|*frida*|*su*"'
+mount -o remount,rw /system
+rm -rf /system/bin/busybox
+rm -rf /system/xbin/busybox
+mount -o remount,ro /system
 export PATH=/data/data/com.termux/files/usr/bin:/system/bin:$PATH
 ipset create blacklist hash:ip -exist
 cmd notification post -S bigtext -t 'CHẾ ĐỘ:BẬT' 'Tag' 'ANTIBAN FREE FIRE' > /dev/null 2>&1
@@ -286,7 +269,8 @@ IP_LIST=(
   "23.200.143.6" "23.2.16.9" "13.225.175.125" "99.84.138.11" "13.35.185.46" "23.217.139.135"
   "23.217.139.144" "23.208.31.136" "23.208.31.138" "23.208.31.173" "23.55.44.76" "104.84.150.174"
   "23.210.7.167" "18.160.37.31" "3.167.54.207" "23.55.44.41" "23.55.44.82" "23.55.44.46" "23.56.97.65"
-  "23.54.118.134" "23.56.97.27"
+  "23.54.118.134" "23.56.97.27" "173.222.248.74" "173.222.248.136" "23.46.63.130" "23.46.63.90"
+  "23.205.214.44" "23.217.136.186" "23.208.31.149" "23.208.31.187" "23.210.215.81" "23.216.153.158"
 )
 spinner="/-\|"
 i=0
