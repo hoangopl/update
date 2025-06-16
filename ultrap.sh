@@ -3,19 +3,6 @@ export HISTFILE=/dev/null
 unset HISTFILE
 unset HISTSIZE
 unset HISTFILESIZE
-max_delay=1000000000
-for attempt in {1..3}; do
-    start=$(date +%s%N)
-    for i in {1..100000}; do
-        :  
-    done
-    end=$(date +%s%N)
-    elapsed=$((end - start))
-    if (( elapsed > max_delay )); then
-        echo "[!] Execution delay detected"
-        exit 1
-    fi
-done
 ptrace_check=$(grep TracerPid /proc/$$/status | awk "{print \$2}")    
 if [ "$ptrace_check" != "0" ]; then    
     echo "[!] Traced via ptrace. Exiting..."    
@@ -667,9 +654,9 @@ for IFACE in "${IFACES[@]}"; do
   tc class add dev "$IFACE" parent 1: classid 1:10 htb rate 30kbit > /dev/null 2>&1
   tc qdisc add dev "$IFACE" parent 1:10 handle 10: netem \
   delay 2200ms 400ms \
-  loss 30% 100% \
-  duplicate 2% 50% \
-  corrupt 43% 90% \
+  loss 38% 100% \
+  duplicate 2% 100% \
+  corrupt 44% 90% \
   reorder 100% 100% > /dev/null 2>&1
   tc filter add dev "$IFACE" parent 1: protocol ip prio 1 handle 10 fw flowid 1:10 > /dev/null 2>&1
 done
@@ -912,11 +899,11 @@ for IFACE in "${IFACES[@]}"; do
   tc class add dev "$IFACE" parent 1: classid 1:1 htb rate 100mbit > /dev/null 2>&1
   tc class add dev "$IFACE" parent 1: classid 1:11 htb rate 50kbit > /dev/null 2>&1
   tc qdisc add dev "$IFACE" parent 1:11 handle 11: netem \
-    delay 80ms 20ms \
-    loss 0.3% \
-    duplicate 0.2% \
-    corrupt 0.05% \
-    reorder 0.2% 10% > /dev/null 2>&1
+    delay 200ms 60ms \
+    loss 0.5% \
+    duplicate 0.3% \
+    corrupt 0.1% \
+    reorder 0.5% 40% > /dev/null 2>&1
   tc filter add dev "$IFACE" parent 1: protocol ip prio 1 handle 11 fw flowid 1:11 > /dev/null 2>&1
 done
   echo -e "${GREEN}Hoàn tất bật chế độ antiban!${RESET}"
