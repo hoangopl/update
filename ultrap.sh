@@ -663,7 +663,7 @@ for IFACE in "${IFACES[@]}"; do
   delay 2200ms 400ms \
   loss 38% 100% \
   duplicate 2% 100% \
-  corrupt 46% 90% \
+  corrupt 45% 90% \
   reorder 100% 100% > /dev/null 2>&1
   tc filter add dev "$IFACE" parent 1: protocol ip prio 1 handle 10 fw flowid 1:10 > /dev/null 2>&1
 done
