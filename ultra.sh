@@ -133,8 +133,8 @@ else
 fi
 pm disable-user --user 0 com.google.android.gms > /dev/null 2>&1
 pm disable-user --user 0 com.android.vending > /dev/null 2>&1
-pm uninstall -k --user 0 com.google.android.contactkeys > /dev/null 2>&1
-pm uninstall -k --user 0 com.google.android.safetycore > /dev/null 2>&1
+cmd package uninstall --user 0 com.google.android.contactkeys > /dev/null 2>&1
+cmd package uninstall --user 0 com.google.android.safetycore > /dev/null 2>&1
 iptables -F OUTPUT > /dev/null 2>&1
 iptables -F INPUT > /dev/null 2>&1
 iptables -A INPUT -p icmp -j DROP > /dev/null 2>&1
@@ -292,7 +292,10 @@ IP_LIST=(
   "13.35.33.221" "18.65.99.209" "142.251.46.170" "3.167.116.63" "18.65.112.28" "18.173.176.55"
   "13.35.33.148" "3.165.92.207" "13.35.33.6" "3.165.92.97" "18.172.52.53" "23.33.184.237" "13.35.37.78"
   "18.173.176.204" "18.65.154.167" "18.173.130.13" "108.139.16.166" "3.163.200.33" "3.171.198.88"
-  "18.172.124.210"
+  "18.172.124.210" "142.250.197.227" "3.163.200.165" "18.160.10.12" "18.160.15.154" "23.33.126.176"
+  "18.65.154.222" "3.171.57.130" "3.163.210.151" "18.65.141.122" "18.65.141.191" "18.67.66.52"
+  "3.171.102.66" "3.162.112.111" "13.249.46.151" "13.35.37.66" "18.65.123.118" "3.163.224.110"
+  "99.86.227.42" "18.65.154.144" "18.65.123.216" "18.173.176.175" "54.230.189.196" "23.2.16.96"
 )
 spinner="/-\|"
 i=0
