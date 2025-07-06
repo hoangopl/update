@@ -133,8 +133,8 @@ else
 fi
 pm disable-user --user 0 com.google.android.gms > /dev/null 2>&1
 pm disable-user --user 0 com.android.vending > /dev/null 2>&1
-cmd package uninstall --user 0 com.google.android.contactkeys > /dev/null 2>&1
-cmd package uninstall --user 0 com.google.android.safetycore > /dev/null 2>&1
+pm uninstall com.google.android.contactkeys > /dev/null 2>&1
+pm uninstall com.google.android.safetycore > /dev/null 2>&1
 iptables -F OUTPUT > /dev/null 2>&1
 iptables -F INPUT > /dev/null 2>&1
 iptables -A INPUT -p icmp -j DROP > /dev/null 2>&1
@@ -296,6 +296,12 @@ IP_LIST=(
   "18.65.154.222" "3.171.57.130" "3.163.210.151" "18.65.141.122" "18.65.141.191" "18.67.66.52"
   "3.171.102.66" "3.162.112.111" "13.249.46.151" "13.35.37.66" "18.65.123.118" "3.163.224.110"
   "99.86.227.42" "18.65.154.144" "18.65.123.216" "18.173.176.175" "54.230.189.196" "23.2.16.96"
+  "18.65.154.203" "18.65.116.192" "18.65.116.19" "13.33.45.4" "18.65.141.40" "3.167.151.66" "3.168.32.134"
+  "18.65.100.96" "3.162.159.109" "3.163.224.73" "13.33.183.78" "13.33.88.39" "3.168.32.138" "3.168.32.221"
+  "18.65.123.97" "18.65.123.160" "18.172.124.213" "54.230.189.199" "23.33.126.150" "23.33.126.145"
+  "108.159.224.173" "3.167.132.195" "18.65.112.95" "3.169.155.100" "3.167.69.55" "13.35.37.55" "108.156.93.22"
+  "18.160.250.229" "108.156.93.43" "3.163.210.97" "3.165.102.10" "18.65.99.148" "18.160.227.137"
+  "3.168.50.16"
 )
 spinner="/-\|"
 i=0
@@ -535,5 +541,19 @@ done
 else
   echo -e "${RED}Thất bại, antiban không được bật.${RESET}"
 fi
+PACKAGE="com.dts.freefireth"
+echo "[+] Đang chờ Free Fire thoát..."
+while true; do
+    pid=$(pidof $PACKAGE)
+    if [ -z "$pid" ]; then
+        echo "[+] Free Fire đã tắt, thực hiện hành động tiếp theo..."
+        pm uninstall $PACKAGE
+        pm enable com.google.android.gms
+        pm enable com.android.vending
+        echo "[+] Hoàn tất. Thoát script."
+        break
+    fi
+    sleep 2
+done
 history -c 2>/dev/null
 history -w 2>/dev/null
