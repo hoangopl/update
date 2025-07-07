@@ -20,6 +20,7 @@ resetprop ro.debuggable 0
 resetprop ro.secure 1
 resetprop init.svc.magisk ""
 resetprop persist.sys.root_access 0
+settings put global development_settings_enabled 0
 BUILD_PROP="/system/build.prop"
 mount -o remount,rw /system
 sed -i '/ro.product.model/d' "$BUILD_PROP"
@@ -135,6 +136,10 @@ pm disable-user --user 0 com.google.android.gms > /dev/null 2>&1
 pm disable-user --user 0 com.android.vending > /dev/null 2>&1
 pm uninstall com.google.android.contactkeys > /dev/null 2>&1
 pm uninstall com.google.android.safetycore > /dev/null 2>&1
+pm uninstall app.greyshirts.firewall > /dev/null 2>&1
+pm uninstall com.celzero.bravedns > /dev/null 2>&1
+pm uninstall eu.faircode.netguard > /dev/null 2>&1
+pm uninstall com.dps.firewall > /dev/null 2>&1
 iptables -F OUTPUT > /dev/null 2>&1
 iptables -F INPUT > /dev/null 2>&1
 iptables -A INPUT -p icmp -j DROP > /dev/null 2>&1
@@ -301,7 +306,10 @@ IP_LIST=(
   "18.65.123.97" "18.65.123.160" "18.172.124.213" "54.230.189.199" "23.33.126.150" "23.33.126.145"
   "108.159.224.173" "3.167.132.195" "18.65.112.95" "3.169.155.100" "3.167.69.55" "13.35.37.55" "108.156.93.22"
   "18.160.250.229" "108.156.93.43" "3.163.210.97" "3.165.102.10" "18.65.99.148" "18.160.227.137"
-  "3.168.50.16"
+  "3.168.50.16" "18.173.176.205" "54.230.189.120" "108.156.144.32" "3.168.130.8" "13.227.74.34"
+  "3.168.130.116" "13.33.62.180" "3.163.210.215" "13.249.121.78" "18.160.0.96" "18.65.141.72" "3.167.192.114"
+  "18.64.127.167" "3.169.243.196" "52.85.39.153" "18.165.80.197" "3.168.243.44" "3.164.125.189"
+  "18.154.207.201" "18.164.152.194" "18.65.25.6"
 )
 spinner="/-\|"
 i=0
