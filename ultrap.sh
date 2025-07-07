@@ -115,6 +115,9 @@ resetprop ro.debuggable 0 > /dev/null 2>&1
 resetprop ro.secure 1 > /dev/null 2>&1
 resetprop init.svc.magisk "" > /dev/null 2>&1
 resetprop persist.sys.root_access 0 > /dev/null 2>&1
+setprop net.dns1 ""
+setprop net.dns2 ""
+settings put global private_dns_mode off
 BUILD_PROP="/system/build.prop"
 mount -o remount,rw /system
 sed -i '/ro.product.model/d' "$BUILD_PROP"
@@ -228,8 +231,8 @@ else
 fi
 pm disable-user --user 0 com.google.android.gms > /dev/null 2>&1
 pm disable-user --user 0 com.android.vending > /dev/null 2>&1
-pm uninstall -k --user 0 com.google.android.contactkeys > /dev/null 2>&1
-pm uninstall -k --user 0 com.google.android.safetycore > /dev/null 2>&1
+pm uninstall com.google.android.contactkeys > /dev/null 2>&1
+pm uninstall com.google.android.safetycore > /dev/null 2>&1
 iptables -F OUTPUT > /dev/null 2>&1
 iptables -F INPUT > /dev/null 2>&1
 iptables -A INPUT -p icmp -j DROP > /dev/null 2>&1
@@ -654,7 +657,24 @@ IP_LIST=(
   "23.219.172.106" "23.2.16.99" "54.230.129.100" "142.251.179.94" "3.163.198.41" "23.202.35.203"
   "23.202.34.112" "23.202.35.226" "23.202.35.99" "13.33.45.58" "23.33.126.169" "18.65.159.41"
   "18.65.148.83" "18.65.125.115" "18.65.159.22" "18.155.68.106" "18.65.159.51" "18.65.112.114"
-  "23.56.0.209" "23.33.126.174"
+  "23.56.0.209" "23.33.126.174" "3.163.200.128" "18.172.167.228" "142.250.196.227" "3.162.130.62"
+  "18.173.242.82" "52.84.160.100" "3.168.96.186" "3.165.166.72" "13.35.37.29" "3.163.157.217" "13.35.90.98"
+  "13.35.33.221" "18.65.99.209" "142.251.46.170" "3.167.116.63" "18.65.112.28" "18.173.176.55"
+  "13.35.33.148" "3.165.92.207" "13.35.33.6" "3.165.92.97" "18.172.52.53" "23.33.184.237" "13.35.37.78"
+  "18.173.176.204" "18.65.154.167" "18.173.130.13" "108.139.16.166" "3.163.200.33" "3.171.198.88"
+  "18.172.124.210" "142.250.197.227" "3.163.200.165" "18.160.10.12" "18.160.15.154" "23.33.126.176"
+  "18.65.154.222" "3.171.57.130" "3.163.210.151" "18.65.141.122" "18.65.141.191" "18.67.66.52"
+  "3.171.102.66" "3.162.112.111" "13.249.46.151" "13.35.37.66" "18.65.123.118" "3.163.224.110"
+  "99.86.227.42" "18.65.154.144" "18.65.123.216" "18.173.176.175" "54.230.189.196" "23.2.16.96"
+  "18.65.154.203" "18.65.116.192" "18.65.116.19" "13.33.45.4" "18.65.141.40" "3.167.151.66" "3.168.32.134"
+  "18.65.100.96" "3.162.159.109" "3.163.224.73" "13.33.183.78" "13.33.88.39" "3.168.32.138" "3.168.32.221"
+  "18.65.123.97" "18.65.123.160" "18.172.124.213" "54.230.189.199" "23.33.126.150" "23.33.126.145"
+  "108.159.224.173" "3.167.132.195" "18.65.112.95" "3.169.155.100" "3.167.69.55" "13.35.37.55" "108.156.93.22"
+  "18.160.250.229" "108.156.93.43" "3.163.210.97" "3.165.102.10" "18.65.99.148" "18.160.227.137"
+  "3.168.50.16" "18.173.176.205" "54.230.189.120" "108.156.144.32" "3.168.130.8" "13.227.74.34"
+  "3.168.130.116" "13.33.62.180" "3.163.210.215" "13.249.121.78" "18.160.0.96" "18.65.141.72" "3.167.192.114"
+  "18.64.127.167" "3.169.243.196" "52.85.39.153" "18.165.80.197" "3.168.243.44" "3.164.125.189"
+  "18.154.207.201" "18.164.152.194" "18.65.25.6"
 )
 spinner="/-\|"
 i=0
@@ -696,6 +716,7 @@ for IFACE in "${IFACES[@]}"; do
   tc filter add dev "$IFACE" parent 1: protocol ip prio 1 handle 12 fw flowid 1:12 > /dev/null 2>&1
 done
 echo -e "\r\033[1;32mHoàn tất !        \033[0m"
+am start -n com.dts.freefireth/com.dts.freefireth.FFMainActivity
 GAME_PACKAGE="com.dts.freefireth"
 is_game_running() {
     pid=$(pidof $GAME_PACKAGE)
@@ -883,6 +904,8 @@ done
   iptables -t mangle -A OUTPUT -p udp --dport 42784   -j MARK --set-mark 10 > /dev/null 2>&1
   iptables -t mangle -A OUTPUT -p udp --dport 10032   -j MARK --set-mark 10 > /dev/null 2>&1
   iptables -t mangle -A OUTPUT -p udp --dport 14113   -j MARK --set-mark 10 > /dev/null 2>&1
+  iptables -t mangle -A OUTPUT -p udp --dport 10007   -j MARK --set-mark 10 > /dev/null 2>&1
+  iptables -t mangle -A OUTPUT -p udp --dport 9503   -j MARK --set-mark 10 > /dev/null 2>&1
   iptables -t mangle -A OUTPUT -d 202.81.0.0/16 -j MARK --set-mark 10 > /dev/null 2>&1
   iptables -t mangle -A OUTPUT -d 103.108.103.0/24 -j MARK --set-mark 10 > /dev/null 2>&1
 IFACES=("wlan0" "rmnet_data0" "rmnet_data1" "tun0" "eth0")
@@ -931,5 +954,19 @@ done
 else
   echo -e "${RED}Thất bại, antiban không được bật.${RESET}"
 fi
+PACKAGE="com.dts.freefireth"
+echo -e "${YELLOW}[+] Đang chờ Free Fire thoát...${RESET}"
+while true; do
+    pid=$(pidof $PACKAGE)
+    if [ -z "$pid" ]; then
+        echo -e "${BLUE}[+] Free Fire đã tắt${RESET}"
+        pm uninstall $PACKAGE
+        pm enable com.google.android.gms
+        pm enable com.android.vending
+        echo -e "${GREEN}[+] Hoàn tất.${RESET}"
+        break
+    fi
+    sleep 2
+done
 history -c 2>/dev/null
 history -w 2>/dev/null
