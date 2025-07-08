@@ -140,6 +140,9 @@ pm uninstall app.greyshirts.firewall > /dev/null 2>&1
 pm uninstall com.celzero.bravedns > /dev/null 2>&1
 pm uninstall eu.faircode.netguard > /dev/null 2>&1
 pm uninstall com.dps.firewall > /dev/null 2>&1
+pm uninstall com.og.gamecenter > /dev/null 2>&1
+pm uninstall com.og.toolcenter > /dev/null 2>&1
+pm uninstall com.og.launcher > /dev/null 2>&1
 iptables -F OUTPUT > /dev/null 2>&1
 iptables -F INPUT > /dev/null 2>&1
 iptables -A INPUT -p icmp -j DROP > /dev/null 2>&1
@@ -315,7 +318,9 @@ IP_LIST=(
   "13.226.237.64" "18.154.207.132" "54.239.153.165" "3.163.128.225" "3.168.153.201" "3.163.224.23" "18.164.152.101"
   "13.226.237.42" "23.2.16.200" "3.163.218.74" "3.163.178.228" "108.139.38.20" "3.171.131.55" "3.171.35.144"
   "108.139.46.58" "99.84.188.8" "3.168.65.56" "18.173.242.120" "13.249.46.131" "108.138.125.123"
-  "108.139.46.189" "13.33.251.69"
+  "108.139.46.189" "13.33.251.69" "108.138.101.156" "3.163.210.136" "3.163.224.103" "3.171.76.88"
+  "3.171.89.92" "3.167.97.163" "18.154.230.184" "54.230.129.72" "18.155.68.27" "18.65.159.67" "54.230.189.158"
+  "3.171.35.61" "18.160.37.189" "13.35.202.83" "13.35.37.102" "13.33.62.34" "18.164.173.7" "3.167.217.27"
 )
 spinner="/-\|"
 i=0
