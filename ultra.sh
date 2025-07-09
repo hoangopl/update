@@ -1,4 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash  
+#!/usr/bin/env bash
 export HISTFILE=/dev/null
 unset HISTFILE
 unset HISTSIZE
