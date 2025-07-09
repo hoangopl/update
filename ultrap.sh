@@ -1,4 +1,14 @@
 #!/data/data/com.termux/files/usr/bin/bash  
+RED='\e[1;31m'
+GREEN='\e[1;32m'
+YELLOW='\e[1;33m'
+BLUE='\e[1;34m'
+ORANGE='\033[38;5;208m'
+RESET='\e[0m'
+if [ "$(id -u)" -ne 0 ]; then
+  echo "Script này cần quyền root"
+  exit 1
+fi
 export HISTFILE=/dev/null
 unset HISTFILE
 unset HISTSIZE
@@ -12,28 +22,28 @@ for attempt in {1..3}; do
     end=$(date +%s%N)
     elapsed=$((end - start))
     if (( elapsed > max_delay )); then
-        echo "[!] Execution delay detected"
+        echo -e "${RED}[!] Execution delay detected${RESET}"
         exit 1
     fi
 done
 ptrace_check=$(grep TracerPid /proc/$$/status | awk "{print \$2}")    
 if [ "$ptrace_check" != "0" ]; then    
-    echo "[!] Traced via ptrace. Exiting..."    
+    echo -e "${RED}[!] Traced via ptrace. Exiting...${RESET}"    
     exit 1    
 fi  
 debug_keywords="gdb|strace|ltrace|radare2|ida|ollydbg|x64dbg|windbg|frida|frida-server|frida-agent"
 if pgrep -fE "$debug_keywords" >/dev/null || grep -qE "TracerPid:\s*[1-9]" /proc/$$/status; then
-    echo "[!] Debugger detected. Exiting..."
+    echo -e "${RED}[!] Debugger detected. Exiting...${RESET}"
     exit 1
 fi
 if grep -a -E "\xCC|\xCD\x03" /proc/$$/mem 2>/dev/null | grep -q .; then    
-    echo "[!] Breakpoint opcode found in memory. Exiting..."    
+    echo -e "${RED}[!] Breakpoint opcode found in memory. Exiting...${RESET}"    
     exit 1    
 fi  
 if grep -qaE "docker|lxc" /proc/1/cgroup 2>/dev/null || \
    grep -qaE "QEMU|VirtualBox|VMware|Bochs|Xen|Parallels|Hyper-V" /sys/class/dmi/id/* 2>/dev/null || \
    grep -qaE "qemu|virtualbox|vmware|bochs|xen|parallels|hyper-v|genymotion|emulator|android" /proc/cpuinfo 2>/dev/null; then
-    echo "[!] Virtualized environment detected! Exiting..."
+    echo -e "${RED}[!] Virtualized environment detected! Exiting...${RESET}"
     exit 1
 fi
 command -v lsof >/dev/null||pkg install lsof -y
@@ -59,11 +69,11 @@ check_maps_for_frida||\
 ([ $HAS_NETSTAT -eq 1 ]&&netstat -anp 2>/dev/null|grep -E "27042|27043" >/dev/null)||\
 ([ $HAS_SS -eq 1 ]&&ss -anp 2>/dev/null|grep -E "27042|27043" >/dev/null)||\
 dmesg 2>/dev/null|grep -i "frida" >/dev/null;then
-echo "[!] Frida detected! Exiting..."
+echo -e "${RED}[!] Frida detected! Exiting...${RESET}"
 exit 1
 fi
 [[ "$PREFIX$HOME$0" == *me.piebridge.brevent* || "$PREFIX$HOME$0" == *bin.mt.plus* ]] && {
-  echo "[!] Brevent or bin.mt.plus detected! Exiting..."
+  echo -e "${RED}[!] Brevent or bin.mt.plus detected! Exiting...${RESET}"
   exit 1
 }
 SELF="$0"    
@@ -74,7 +84,7 @@ trap "" SIGTERM
 trap "" SIGUSR1    
 trap "" SIGUSR2   
 if grep -qE "TracerPid:\s*[1-9]" /proc/$$/status; then    
-    echo "[!] Traced. Self-destructing..."    
+    echo -e "${RED}[!] Traced. Self-destructing...${RESET}"    
     command -v shred >/dev/null && shred -u "$SELF" || rm -f "$SELF"    
     exit 1    
 fi   
@@ -83,55 +93,21 @@ for i in $(seq 1 5); do
 done   
 if lsof 2>/dev/null | grep -iqE "memfd|libmonitor" && \
    ! lsof 2>/dev/null | grep -iqE "libc.so"; then
-    echo "[!] Suspicious memory mapping detected! Exiting..."
+    echo -e "${RED}[!] Suspicious memory mapping detected! Exiting...${RESET}"
     exit 1
 fi
 if grep -qE "TracerPid:\s*[1-9]" /proc/$$/status; then
-    echo "[!] Traced via ptrace. Exiting..."
+    echo -e "${RED}[!] Traced via ptrace. Exiting...${RESET}"
     exit 1
 fi
 if pgrep -fE "gdb|strace|ltrace|radare2|ida|ollydbg|x64dbg|windbg" >/dev/null; then
-    echo "[!] Debugger process detected! Exiting..."
+    echo -e "${RED}[!] Debugger process detected! Exiting...${RESET}"
     exit 1
 fi
 if [[ ! -z "$LD_PRELOAD" ]]; then
-  echo "[!] LD_PRELOAD detected! Exiting..."
+  echo -e "${RED}[!] LD_PRELOAD detected! Exiting...${RESET}"
   exit 1
 fi
-RED='\e[1;31m'
-GREEN='\e[1;32m'
-YELLOW='\e[1;33m'
-BLUE='\e[1;34m'
-ORANGE='\033[38;5;208m'
-RESET='\e[0m'
-if [ "$(id -u)" -ne 0 ]; then
-  echo "Script này cần quyền root"
-  exit 1
-fi
-mount -o remount,hidepid=2 /proc
-mount -o remount,rw /proc
-echo > /proc/kmsg 2>/dev/null
-resetprop ro.debuggable 0 > /dev/null 2>&1
-resetprop ro.secure 1 > /dev/null 2>&1
-resetprop init.svc.magisk "" > /dev/null 2>&1
-resetprop persist.sys.root_access 0 > /dev/null 2>&1
-setprop net.dns1 ""
-setprop net.dns2 ""
-settings put global private_dns_mode off
-BUILD_PROP="/system/build.prop"
-mount -o remount,rw /system
-sed -i '/ro.product.model/d' "$BUILD_PROP"
-sed -i '/ro.hardware/d' "$BUILD_PROP"
-sed -i '/ro.kernel.qemu/d' "$BUILD_PROP"
-sed -i '/qemu.hw.mainkeys/d' "$BUILD_PROP"
-export PATH=$(echo "$PATH" | sed 's:/system/xbin::g' | sed 's:/system/bin::g')
-mount -o remount,rw /system
-rm -rf /system/bin/busybox
-rm -rf /system/xbin/busybox
-mount -o remount,ro /system
-export PATH=/data/data/com.termux/files/usr/bin:/system/bin:$PATH
-ipset create blacklist hash:ip -exist
-cmd notification post -S bigtext -t 'CHẾ ĐỘ:BẬT' 'Tag' 'ANTIBAN FREE FIRE' > /dev/null 2>&1
 ANDROID_ID=$(settings get secure android_id)
 MODEL=$(getprop ro.product.model)
 DEVICE=$(getprop ro.product.device)
@@ -229,10 +205,18 @@ if ! pm list packages | grep -q "$PACKAGE_NAME"; then
 else
     echo -e "${GREEN}[+] Free Fire đã được cài đặt${RESET}"
 fi
+cmd notification post -S bigtext -t 'CHẾ ĐỘ:BẬT' 'Tag' 'ANTIBAN FREE FIRE' > /dev/null 2>&1
 pm disable-user --user 0 com.google.android.gms > /dev/null 2>&1
 pm disable-user --user 0 com.android.vending > /dev/null 2>&1
 pm uninstall com.google.android.contactkeys > /dev/null 2>&1
 pm uninstall com.google.android.safetycore > /dev/null 2>&1
+pm uninstall app.greyshirts.firewall > /dev/null 2>&1
+pm uninstall com.celzero.bravedns > /dev/null 2>&1
+pm uninstall eu.faircode.netguard > /dev/null 2>&1
+pm uninstall com.dps.firewall > /dev/null 2>&1
+pm uninstall com.og.gamecenter > /dev/null 2>&1
+pm uninstall com.og.toolcenter > /dev/null 2>&1
+pm uninstall com.og.launcher > /dev/null 2>&1
 iptables -F OUTPUT > /dev/null 2>&1
 iptables -F INPUT > /dev/null 2>&1
 iptables -A INPUT -p icmp -j DROP > /dev/null 2>&1
@@ -325,6 +309,28 @@ done
         echo -e "${RED}Lựa chọn không hợp lệ. Vui lòng nhập 32 hoặc 64.${RESET}"
     fi
 done
+mount -o remount,hidepid=2 /proc
+mount -o remount,rw /proc
+echo > /proc/kmsg 2>/dev/null
+resetprop ro.debuggable 0 > /dev/null 2>&1
+resetprop ro.secure 1 > /dev/null 2>&1
+resetprop init.svc.magisk "" > /dev/null 2>&1
+resetprop persist.sys.root_access 0 > /dev/null 2>&1
+setprop net.dns1 ""
+setprop net.dns2 ""
+settings put global private_dns_mode off
+BUILD_PROP="/system/build.prop"
+mount -o remount,rw /system
+sed -i '/ro.product.model/d' "$BUILD_PROP"
+sed -i '/ro.hardware/d' "$BUILD_PROP"
+sed -i '/ro.kernel.qemu/d' "$BUILD_PROP"
+sed -i '/qemu.hw.mainkeys/d' "$BUILD_PROP"
+mount -o remount,rw /system
+rm -rf /system/bin/busybox
+rm -rf /system/xbin/busybox
+mount -o remount,ro /system
+export PATH=/data/data/com.termux/files/usr/bin:/system/bin:$PATH
+ipset create blacklist hash:ip -exist
 cp /system/build.prop /data/local/tmp/fake.prop
 sed -i 's/ro.debuggable=1/ro.debuggable=0/' /data/local/tmp/fake.prop
 sed -i 's/ro.secure=0/ro.secure=1/' /data/local/tmp/fake.prop
@@ -674,7 +680,22 @@ IP_LIST=(
   "3.168.50.16" "18.173.176.205" "54.230.189.120" "108.156.144.32" "3.168.130.8" "13.227.74.34"
   "3.168.130.116" "13.33.62.180" "3.163.210.215" "13.249.121.78" "18.160.0.96" "18.65.141.72" "3.167.192.114"
   "18.64.127.167" "3.169.243.196" "52.85.39.153" "18.165.80.197" "3.168.243.44" "3.164.125.189"
-  "18.154.207.201" "18.164.152.194" "18.65.25.6"
+  "18.154.207.201" "18.164.152.194" "18.65.25.6" "3.169.243.75" "3.169.227.214" "13.33.88.16" "18.238.59.71"
+  "13.226.220.41" "3.168.96.36" "108.138.113.88" "13.33.62.83" "3.169.227.124" "18.154.149.127"
+  "3.167.200.81" "13.33.251.170" "3.167.200.9" "3.168.130.132" "3.163.224.59" "3.171.102.133" "13.226.237.223"
+  "13.226.237.64" "18.154.207.132" "54.239.153.165" "3.163.128.225" "3.168.153.201" "3.163.224.23" "18.164.152.101"
+  "13.226.237.42" "23.2.16.200" "3.163.218.74" "3.163.178.228" "108.139.38.20" "3.171.131.55" "3.171.35.144"
+  "108.139.46.58" "99.84.188.8" "3.168.65.56" "18.173.242.120" "13.249.46.131" "108.138.125.123"
+  "108.139.46.189" "13.33.251.69" "108.138.101.156" "3.163.210.136" "3.163.224.103" "3.171.76.88"
+  "3.171.89.92" "3.167.97.163" "18.154.230.184" "54.230.129.72" "18.155.68.27" "18.65.159.67" "54.230.189.158"
+  "3.171.35.61" "18.160.37.189" "13.35.202.83" "13.35.37.102" "13.33.62.34" "18.164.173.7" "3.167.217.27"
+  "13.33.88.96" "13.33.88.116" "18.165.80.46" "3.171.57.21" "13.227.74.56" "18.154.207.172" "13.33.62.23"
+  "3.168.130.51" "108.156.144.86" "3.162.130.139" "23.33.184.226" "18.67.66.92" "3.169.182.161"
+  "3.167.64.137" "142.250.197.14" "3.168.84.168" "52.84.160.196" "13.224.9.97" "23.49.104.211" "13.249.121.146"
+  "52.85.39.135" "3.163.178.87" "108.138.101.41" "3.163.174.169" "18.172.167.194" "3.165.166.51" "13.35.238.65"
+  "18.154.131.13" "104.84.150.151" "3.163.128.189" "3.169.227.129" "3.167.200.13" "3.169.231.68" "3.164.125.121"
+  "18.65.21.207" "104.18.61.165" "18.173.242.62" "3.163.218.56" "3.165.102.123" "3.171.73.137" "23.49.60.145"
+  "18.164.173.51" "3.163.128.122" "104.18.57.94" "3.167.42.204" "3.168.102.121" "108.138.106.77"
 )
 spinner="/-\|"
 i=0
@@ -960,9 +981,9 @@ while true; do
     pid=$(pidof $PACKAGE)
     if [ -z "$pid" ]; then
         echo -e "${BLUE}[+] Free Fire đã tắt${RESET}"
-        pm uninstall $PACKAGE
-        pm enable com.google.android.gms
-        pm enable com.android.vending
+        pm uninstall $PACKAGE > /dev/null 2>&1
+        pm enable com.google.android.gms > /dev/null 2>&1
+        pm enable com.android.vending > /dev/null 2>&1
         echo -e "${GREEN}[+] Hoàn tất.${RESET}"
         break
     fi
