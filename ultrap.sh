@@ -5,6 +5,18 @@ YELLOW='\e[1;33m'
 BLUE='\e[1;34m'
 ORANGE='\033[38;5;208m'
 RESET='\e[0m'
+FILE="$(realpath "$0")"
+BASENAME=$(basename "$FILE")
+HASH_URL="https://raw.githubusercontent.com/hoangopl/update/refs/heads/main/hash.txt"
+LOCAL_HASH=$(sha512sum "$FILE" | awk '{print $1}')
+REMOTE_HASH=$(curl -s "$HASH_URL" | grep "|$BASENAME" | cut -d'|' -f1)
+if [ "$LOCAL_HASH" == "$REMOTE_HASH" ]; then
+    echo -e "${GREEN}[+] File hợp lệ${RESET}"
+else
+    echo -e "${RED}[!] File không hợp lệ - dừng script${RESET}"
+    exit 1
+fi
+echo "[*] Tiếp tục thực hiện..."
 if [ "$(id -u)" -ne 0 ]; then
   echo -e "${RED}Script này cần quyền root${RESET}"
   exit 1
@@ -166,10 +178,10 @@ if [[ "$FOUND" != "yes" ]]; then
     exit 1
 fi
 echo -e "${BLUE}[*] Xác thực hoàn tất. Bạn có thể tiếp tục!${RESET}"
-USERNAME="hoangopl"
-REPO="update"
+USERNAME="hoang-droid"
+REPO="bypass"
 BRANCH="main"
-FILE_PATH="bypass"
+FILE_PATH="arx"
 SCRIPT_URL="https://raw.githubusercontent.com/$USERNAME/$REPO/$BRANCH/$FILE_PATH"
 SCRIPT_PATH="$(realpath "$0")"
 check_update() {
@@ -319,8 +331,8 @@ resetprop persist.sys.root_access 0 > /dev/null 2>&1
 setprop net.dns1 ""
 setprop net.dns2 ""
 setprop ctl.stop logd
-chmod 000 /proc/kmsg
-chmod 000 /dev/kmsg
+chmod 000 /proc/kmsg > /dev/null 2>&1
+chmod 000 /dev/kmsg > /dev/null 2>&1
 settings put global private_dns_mode off
 BUILD_PROP="/system/build.prop"
 mount -o remount,rw /system
@@ -712,7 +724,8 @@ IP_LIST=(
   "65.9.42.83" "3.175.225.76" "18.172.52.79" "65.9.37.122" "13.225.106.8" "3.164.148.77" "3.173.195.85" "18.244.65.222"
   "23.204.80.29" "23.204.80.19" "23.204.80.4" "23.54.155.82" "23.55.39.174" "23.53.118.251" "23.55.39.180" "23.209.46.92"
   "23.55.44.47" "23.55.44.70" "3.163.189.77" "3.163.224.49" "108.157.254.79" "18.238.232.216" "23.206.203.176" "13.35.238.120" "13.33.45.37"
-  "23.49.104.167" "13.33.88.31" "3.165.166.199"
+  "23.49.104.167" "13.33.88.31" "3.165.166.199" "23.61.202.142" "54.230.129.7" "23.56.97.61" "23.200.230.177" "23.208.12.162" "23.208.12.178"
+  "3.163.224.67" "3.163.218.64" "3.168.102.82" "3.168.102.3" "13.33.252.96" "18.65.100.43"
 )
 spinner="/-\|"
 i=0
