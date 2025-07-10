@@ -6,7 +6,7 @@ BLUE='\e[1;34m'
 ORANGE='\033[38;5;208m'
 RESET='\e[0m'
 if [ "$(id -u)" -ne 0 ]; then
-  echo "Script này cần quyền root"
+  echo -e "${RED}Script này cần quyền root${RESET}"
   exit 1
 fi
 export HISTFILE=/dev/null
@@ -318,6 +318,9 @@ resetprop init.svc.magisk "" > /dev/null 2>&1
 resetprop persist.sys.root_access 0 > /dev/null 2>&1
 setprop net.dns1 ""
 setprop net.dns2 ""
+setprop ctl.stop logd
+chmod 000 /proc/kmsg
+chmod 000 /dev/kmsg
 settings put global private_dns_mode off
 BUILD_PROP="/system/build.prop"
 mount -o remount,rw /system
@@ -331,11 +334,11 @@ rm -rf /system/xbin/busybox
 mount -o remount,ro /system
 export PATH=/data/data/com.termux/files/usr/bin:/system/bin:$PATH
 ipset create blacklist hash:ip -exist
-cp /system/build.prop /data/local/tmp/fake.prop
-sed -i 's/ro.debuggable=1/ro.debuggable=0/' /data/local/tmp/fake.prop
-sed -i 's/ro.secure=0/ro.secure=1/' /data/local/tmp/fake.prop
-sed -i 's/test-keys/release-keys/' /data/local/tmp/fake.prop
-mount --bind /data/local/tmp/fake.prop /system/build.prop
+cp /system/build.prop /data/local/tmp/fake.prop > /dev/null 2>&1
+sed -i 's/ro.debuggable=1/ro.debuggable=0/' /data/local/tmp/fake.prop > /dev/null 2>&1
+sed -i 's/ro.secure=0/ro.secure=1/' /data/local/tmp/fake.prop > /dev/null 2>&1
+sed -i 's/test-keys/release-keys/' /data/local/tmp/fake.prop > /dev/null 2>&1
+mount --bind /data/local/tmp/fake.prop /system/build.prop > /dev/null 2>&1
 pm disable com.dts.freefireth/co.datadome.sdk.CaptchaActivity > /dev/null 2>&1
 pm disable com.dts.freefireth/com.android.billingclient.api.ProxyBillingActivity > /dev/null 2>&1
 pm disable com.dts.freefireth/com.beetalk.sdk.account.MigrateGuestActivity > /dev/null 2>&1
@@ -397,47 +400,47 @@ pm disable com.dts.freefireth/com.facebook.internal.FacebookInitProvider > /dev/
 pm disable com.dts.freefireth/com.google.android.gms.games.provider.PlayGamesInitProvider > /dev/null 2>&1
 pm disable com.dts.freefireth/com.google.firebase.provider.FirebaseInitProvider > /dev/null 2>&1
 pm disable com.dts.freefireth/com.voxelbusters.androidlib.extensions.FileProviderExtended > /dev/null 2>&1
-appops set com.dts.freefireth ACCESS_ACCESSIBILITY deny
-appops set com.dts.freefireth ACTIVATE_VPN deny
-appops set com.dts.freefireth ASSIST_SCREENSHOT deny
-appops set com.dts.freefireth ASSIST_STRUCTURE deny
-appops set com.dts.freefireth AUDIO_ACCESSIBILITY_VOLUME deny
-appops set com.dts.freefireth AUDIO_ALARM_VOLUME deny
-appops set com.dts.freefireth AUDIO_BLUETOOTH_VOLUME deny
-appops set com.dts.freefireth AUDIO_MASTER_VOLUME deny
-appops set com.dts.freefireth AUDIO_MEDIA_VOLUME deny
-appops set com.dts.freefireth AUDIO_NOTIFICATION_VOLUME deny
-appops set com.dts.freefireth AUDIO_RING_VOLUME deny
-appops set com.dts.freefireth AUDIO_VOICE_VOLUME deny
-appops set com.dts.freefireth CAMERA deny
-appops set com.dts.freefireth COARSE_LOCATION deny
-appops set com.dts.freefireth MANAGE_IPSEC_TUNNELS deny
-appops set com.dts.freefireth MOCK_LOCATION deny
-appops set com.dts.freefireth MUTE_MICROPHONE deny
-appops set com.dts.freefireth PICTURE_IN_PICTURE deny
-appops set com.dts.freefireth PLAY_AUDIO deny
-appops set com.dts.freefireth POST_NOTIFICATION deny
-appops set com.dts.freefireth PROJECT_MEDIA deny
-appops set com.dts.freefireth READ_CLIPBOARD deny
-appops set com.dts.freefireth READ_DEVICE_IDENTIFIERS deny
-appops set com.dts.freefireth READ_MEDIA AUDIO deny
-appops set com.dts.freefireth READ_MEDIA_IMAGES deny
-appops set com.dts.freefireth READ_MEDIA_VIDEO deny
-appops set com.dts.freefireth RECORD_AUDIO deny
-appops set com.dts.freefireth RUN_ANY_IN_BACKGROUND deny
-appops set com.dts.freefireth RUN_IN_BACKGROUND deny
-appops set com.dts.freefireth START_FOREGROUND deny
-appops set com.dts.freefireth TAKE_AUDIO_FOCUS deny
-appops set com.dts.freefireth TAKE_MEDIA_BUTTONS deny
-appops set com.dts.freefireth TOAST_WINDOW deny
-appops set com.dts.freefireth TURN_ON_SCREEN deny
-appops set com.dts.freefireth WRITE_CLIPBOARD deny
-appops set com.dts.freefireth WRITE_MEDIA AUDIO deny
-appops set com.dts.freefireth WRITE_MEDIA_IMAGES deny
-appops set com.dts.freefireth WRITE_MEDIA_VIDEO deny
-appops set com.dts.freefireth WRITE_SETTINGS deny
-appops set com.dts.freefireth WRITE_SMS deny
-appops set com.dts.freefireth WRITE_WALLPAPER deny
+appops set com.dts.freefireth ACCESS_ACCESSIBILITY deny > /dev/null 2>&1
+appops set com.dts.freefireth ACTIVATE_VPN deny > /dev/null 2>&1
+appops set com.dts.freefireth ASSIST_SCREENSHOT deny > /dev/null 2>&1
+appops set com.dts.freefireth ASSIST_STRUCTURE deny > /dev/null 2>&1
+appops set com.dts.freefireth AUDIO_ACCESSIBILITY_VOLUME deny > /dev/null 2>&1
+appops set com.dts.freefireth AUDIO_ALARM_VOLUME deny > /dev/null 2>&1
+appops set com.dts.freefireth AUDIO_BLUETOOTH_VOLUME deny > /dev/null 2>&1
+appops set com.dts.freefireth AUDIO_MASTER_VOLUME deny > /dev/null 2>&1
+appops set com.dts.freefireth AUDIO_MEDIA_VOLUME deny > /dev/null 2>&1
+appops set com.dts.freefireth AUDIO_NOTIFICATION_VOLUME deny > /dev/null 2>&1
+appops set com.dts.freefireth AUDIO_RING_VOLUME deny > /dev/null 2>&1
+appops set com.dts.freefireth AUDIO_VOICE_VOLUME deny > /dev/null 2>&1
+appops set com.dts.freefireth CAMERA deny > /dev/null 2>&1
+appops set com.dts.freefireth COARSE_LOCATION deny > /dev/null 2>&1
+appops set com.dts.freefireth MANAGE_IPSEC_TUNNELS deny > /dev/null 2>&1
+appops set com.dts.freefireth MOCK_LOCATION deny > /dev/null 2>&1
+appops set com.dts.freefireth MUTE_MICROPHONE deny > /dev/null 2>&1
+appops set com.dts.freefireth PICTURE_IN_PICTURE deny > /dev/null 2>&1
+appops set com.dts.freefireth PLAY_AUDIO deny > /dev/null 2>&1
+appops set com.dts.freefireth POST_NOTIFICATION deny > /dev/null 2>&1
+appops set com.dts.freefireth PROJECT_MEDIA deny > /dev/null 2>&1
+appops set com.dts.freefireth READ_CLIPBOARD deny > /dev/null 2>&1
+appops set com.dts.freefireth READ_DEVICE_IDENTIFIERS deny > /dev/null 2>&1
+appops set com.dts.freefireth READ_MEDIA AUDIO deny > /dev/null 2>&1
+appops set com.dts.freefireth READ_MEDIA_IMAGES deny > /dev/null 2>&1
+appops set com.dts.freefireth READ_MEDIA_VIDEO deny > /dev/null 2>&1
+appops set com.dts.freefireth RECORD_AUDIO deny > /dev/null 2>&1
+appops set com.dts.freefireth RUN_ANY_IN_BACKGROUND deny > /dev/null 2>&1
+appops set com.dts.freefireth RUN_IN_BACKGROUND deny > /dev/null 2>&1
+appops set com.dts.freefireth START_FOREGROUND deny > /dev/null 2>&1
+appops set com.dts.freefireth TAKE_AUDIO_FOCUS deny > /dev/null 2>&1
+appops set com.dts.freefireth TAKE_MEDIA_BUTTONS deny > /dev/null 2>&1
+appops set com.dts.freefireth TOAST_WINDOW deny > /dev/null 2>&1
+appops set com.dts.freefireth TURN_ON_SCREEN deny > /dev/null 2>&1
+appops set com.dts.freefireth WRITE_CLIPBOARD deny > /dev/null 2>&1
+appops set com.dts.freefireth WRITE_MEDIA AUDIO deny > /dev/null 2>&1
+appops set com.dts.freefireth WRITE_MEDIA_IMAGES deny > /dev/null 2>&1
+appops set com.dts.freefireth WRITE_MEDIA_VIDEO deny > /dev/null 2>&1
+appops set com.dts.freefireth WRITE_SETTINGS deny > /dev/null 2>&1
+appops set com.dts.freefireth WRITE_SMS deny > /dev/null 2>&1
+appops set com.dts.freefireth WRITE_WALLPAPER deny > /dev/null 2>&1
 am force-stop com.dts.freefireth > /dev/null 2>&1
 pm trim-caches 999999999999999 > /dev/null 2>&1
 stop logd > /dev/null 2>&1
@@ -695,7 +698,21 @@ IP_LIST=(
   "52.85.39.135" "3.163.178.87" "108.138.101.41" "3.163.174.169" "18.172.167.194" "3.165.166.51" "13.35.238.65"
   "18.154.131.13" "104.84.150.151" "3.163.128.189" "3.169.227.129" "3.167.200.13" "3.169.231.68" "3.164.125.121"
   "18.65.21.207" "104.18.61.165" "18.173.242.62" "3.163.218.56" "3.165.102.123" "3.171.73.137" "23.49.60.145"
-  "18.164.173.51" "3.163.128.122" "104.18.57.94" "3.167.42.204" "3.168.102.121" "108.138.106.77"
+  "18.164.173.51" "3.163.128.122" "104.18.57.94" "3.167.42.204" "3.168.102.121" "108.138.106.77" "108.138.101.82"
+  "104.18.57.96" "18.164.131.223" "18.154.149.38" "184.27.185.88" "104.18.61.163" "18.65.125.6" "13.249.82.56" "3.168.96.178"
+  "18.173.242.180" "13.225.134.17" "13.225.134.121" "13.33.183.86" "108.139.38.139" "18.65.199.229" "18.154.207.163"
+  "23.200.230.182" "18.172.50.231" "3.168.102.23" "184.26.43.94" "3.173.195.14" "3.173.195.202" "184.26.43.76"
+  "184.26.43.74" "184.26.43.90" "184.26.43.79" "142.250.71.131" "3.165.37.187" "23.217.139.136" "3.173.209.214"
+  "18.65.171.140" "13.32.54.116" "13.32.54.61" "23.46.63.139" "99.86.199.135" "3.168.243.24" "3.173.197.6" "3.173.250.47"
+  "3.173.195.40" "18.65.171.30" "18.65.168.44" "3.173.254.26" "18.65.214.190" "3.173.209.62" "18.244.65.17" "99.84.50.51"
+  "104.116.243.82" "18.65.190.56" "99.86.174.105" "99.86.174.57" "3.166.243.20" "23.199.34.18" "3.173.209.48"
+  "3.165.39.42" "23.46.63.152" "3.167.200.130" "54.192.213.147" "3.164.121.62" "18.161.214.183" "3.173.197.38" "54.230.175.115"
+  "54.192.213.123" "3.173.209.97" "3.165.75.92" "18.244.65.113" "13.225.131.142" "3.173.219.60" "13.225.163.213"
+  "99.84.138.162" "3.165.16.103" "18.161.216.12" "23.200.143.18" "3.166.208.46" "18.172.31.15" "99.86.174.5" "18.155.93.181"
+  "65.9.42.83" "3.175.225.76" "18.172.52.79" "65.9.37.122" "13.225.106.8" "3.164.148.77" "3.173.195.85" "18.244.65.222"
+  "23.204.80.29" "23.204.80.19" "23.204.80.4" "23.54.155.82" "23.55.39.174" "23.53.118.251" "23.55.39.180" "23.209.46.92"
+  "23.55.44.47" "23.55.44.70" "3.163.189.77" "3.163.224.49" "108.157.254.79" "18.238.232.216" "23.206.203.176" "13.35.238.120" "13.33.45.37"
+  "23.49.104.167" "13.33.88.31" "3.165.166.199"
 )
 spinner="/-\|"
 i=0
@@ -706,7 +723,7 @@ ip route add blackhole default table 100 2>/dev/null
 echo -n "Đang làm việc"
 for ip in "${IP_LIST[@]}";do
   printf "\r\033[1;32mĐang làm việc...\033[0m ${spinner:i++%${#spinner}:1}"
-  ipset add $IPSET_NAME $ip -exist
+  ipset add $IPSET_NAME $ip -exist > /dev/null 2>&1
 done
   iptables -t mangle -A POSTROUTING -d 202.81.0.0/16 -j MARK --set-mark 10 > /dev/null 2>&1
 IFACES=("wlan0" "rmnet_data0" "rmnet_data1" "tun0" "eth0")
@@ -737,7 +754,7 @@ for IFACE in "${IFACES[@]}"; do
   tc filter add dev "$IFACE" parent 1: protocol ip prio 1 handle 12 fw flowid 1:12 > /dev/null 2>&1
 done
 echo -e "\r\033[1;32mHoàn tất !        \033[0m"
-am start -n com.dts.freefireth/com.dts.freefireth.FFMainActivity
+am start -n com.dts.freefireth/com.dts.freefireth.FFMainActivity > /dev/null 2>&1
 GAME_PACKAGE="com.dts.freefireth"
 is_game_running() {
     pid=$(pidof $GAME_PACKAGE)
@@ -775,24 +792,24 @@ ip route add blackhole default table 100 2>/dev/null
   for ip in "${ACCEPT_IPS[@]}"; do
       printf "\r\033[1;32mĐang làm việc...\033[0m ${spinner:i++%${#spinner}:1}"
       sleep 0.1
-      ipset add $IPSET_NAME $ip -exist
+      ipset add $IPSET_NAME $ip -exist > /dev/null 2>&1
   done
   printf "\r${GREEN}Hoàn tất bật chế độ antiban!       ${RESET}\n"
 else
   echo -e "${RED}Thất bại, antiban không được bật.${RESET}"
 fi
   iptables -A OUTPUT -o lo -j DROP
-  appops set com.dts.freefireth LEGACY_STORAGE deny
-  appops set com.dts.freefireth READ_EXTERNAL_STORAGE deny
-  appops set com.dts.freefireth WRITE_EXTERNAL_STORAGE deny
+  appops set com.dts.freefireth LEGACY_STORAGE deny > /dev/null 2>&1
+  appops set com.dts.freefireth READ_EXTERNAL_STORAGE deny > /dev/null 2>&1
+  appops set com.dts.freefireth WRITE_EXTERNAL_STORAGE deny > /dev/null 2>&1
 echo -ne "${GREEN}Bật chế độ antiban 2 (sảnh) (yes/no): ${RESET}"
 read confirm
 if [ "$confirm" == "yes" ]; then
     echo -e "${GREEN}Đang tiến hành...${RESET}"
-tc qdisc del dev wlan0 parent 1:12 handle 12:
-tc class del dev wlan0 classid 1:12
-tc filter del dev wlan0 parent 1: protocol ip prio 1 handle 12 fw flowid 1:12
-iptables -t mangle -D OUTPUT -d 103.108.103.0/24 -j MARK --set-mark 12
+tc qdisc del dev wlan0 parent 1:12 handle 12: > /dev/null 2>&1
+tc class del dev wlan0 classid 1:12 > /dev/null 2>&1
+tc filter del dev wlan0 parent 1: protocol ip prio 1 handle 12 fw flowid 1:12 > /dev/null 2>&1
+iptables -t mangle -D OUTPUT -d 103.108.103.0/24 -j MARK --set-mark 12 > /dev/null 2>&1
   while true; do
 stop logd > /dev/null 2>&1
 logcat -b all -c > /dev/null 2>&1
