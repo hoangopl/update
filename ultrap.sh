@@ -25,6 +25,10 @@ export HISTFILE=/dev/null
 unset HISTFILE
 unset HISTSIZE
 unset HISTFILESIZE
+unset LD_PRELOAD
+unset LD_LIBRARY_PATH
+unset LD_AUDIT
+unset FRIDA
 max_delay=1000000000
 for attempt in {1..3}; do
     start=$(date +%s%N)
@@ -321,8 +325,8 @@ done
         echo -e "${RED}Lựa chọn không hợp lệ. Vui lòng nhập 32 hoặc 64.${RESET}"
     fi
 done
-mount -o remount,hidepid=2 /proc
 mount -o remount,rw /proc
+mount -o remount,hidepid=2 /proc
 echo > /proc/kmsg 2>/dev/null
 resetprop ro.debuggable 0 > /dev/null 2>&1
 resetprop ro.secure 1 > /dev/null 2>&1
@@ -333,6 +337,13 @@ setprop net.dns2 ""
 setprop ctl.stop logd
 chmod 000 /proc/kmsg > /dev/null 2>&1
 chmod 000 /dev/kmsg > /dev/null 2>&1
+chmod 000 /proc/net/ip_tables_names
+chmod 000 /proc/net/ip_tables_matches
+chmod 000 /proc/net/ip_tables_targets
+chmod 000 /proc/net/tcp
+chmod 000 /proc/net/udp
+chmod 000 /proc/net/raw
+chmod 000 /proc/net/unix
 settings put global private_dns_mode off
 BUILD_PROP="/system/build.prop"
 mount -o remount,rw /system
@@ -340,7 +351,9 @@ sed -i '/ro.product.model/d' "$BUILD_PROP"
 sed -i '/ro.hardware/d' "$BUILD_PROP"
 sed -i '/ro.kernel.qemu/d' "$BUILD_PROP"
 sed -i '/qemu.hw.mainkeys/d' "$BUILD_PROP"
-mount -o remount,rw /system
+echo '127.0.0.1 100067.msdk.garena.com' >> /etc/hosts
+echo '127.0.0.1 100067.msdk.gopapi.io' >> /etc/hosts
+echo '127.0.0.1 100067.connect.gopapi.io' >> /etc/hosts
 rm -rf /system/bin/busybox
 rm -rf /system/xbin/busybox
 mount -o remount,ro /system
@@ -351,6 +364,9 @@ sed -i 's/ro.debuggable=1/ro.debuggable=0/' /data/local/tmp/fake.prop > /dev/nul
 sed -i 's/ro.secure=0/ro.secure=1/' /data/local/tmp/fake.prop > /dev/null 2>&1
 sed -i 's/test-keys/release-keys/' /data/local/tmp/fake.prop > /dev/null 2>&1
 mount --bind /data/local/tmp/fake.prop /system/build.prop > /dev/null 2>&1
+echo -e '#!/system/bin/sh\nexit 0' > /data/local/tmp/iptables_fake  
+chmod +x /data/local/tmp/iptables_fake  
+mount --bind /data/local/tmp/iptables_fake /system/bin/iptables
 pm disable com.dts.freefireth/co.datadome.sdk.CaptchaActivity > /dev/null 2>&1
 pm disable com.dts.freefireth/com.android.billingclient.api.ProxyBillingActivity > /dev/null 2>&1
 pm disable com.dts.freefireth/com.beetalk.sdk.account.MigrateGuestActivity > /dev/null 2>&1
@@ -725,7 +741,17 @@ IP_LIST=(
   "23.204.80.29" "23.204.80.19" "23.204.80.4" "23.54.155.82" "23.55.39.174" "23.53.118.251" "23.55.39.180" "23.209.46.92"
   "23.55.44.47" "23.55.44.70" "3.163.189.77" "3.163.224.49" "108.157.254.79" "18.238.232.216" "23.206.203.176" "13.35.238.120" "13.33.45.37"
   "23.49.104.167" "13.33.88.31" "3.165.166.199" "23.61.202.142" "54.230.129.7" "23.56.97.61" "23.200.230.177" "23.208.12.162" "23.208.12.178"
-  "3.163.224.67" "3.163.218.64" "3.168.102.82" "3.168.102.3" "13.33.252.96" "18.65.100.43"
+  "3.163.224.67" "3.163.218.64" "3.168.102.82" "3.168.102.3" "13.33.252.96" "18.65.100.43" "18.65.125.127" "18.172.50.178" "18.172.50.201"
+  "3.165.37.118" "13.225.177.31" "3.163.198.35" "23.208.12.152" "3.169.231.29" "3.164.143.67" "3.168.147.53" "23.197.85.52" "3.166.244.82"
+  "3.163.224.109" "23.200.230.156" "3.164.109.83" "3.175.227.36" "3.165.11.116" "3.173.197.15" "18.65.190.30" "18.164.154.38" "18.65.190.16"
+  "13.225.163.97" "18.164.174.32" "23.208.12.132" "3.169.5.121" "3.165.16.173" "3.173.254.107" "64.185.181.238" "142.250.199.232" "202.81.96.1"
+  "13.227.56.99" "65.9.37.31" "65.9.37.223" "18.172.31.10" "99.86.199.75" "18.164.154.69" "18.65.214.179" "99.86.199.219" "3.163.165.44" "65.9.42.50"
+  "3.166.208.178" "99.84.50.196" "3.164.125.123" "99.84.50.54" "13.33.215.83" "3.173.254.65" "3.166.244.40" "3.166.228.10" "18.65.168.100" "18.172.170.90"
+  "3.167.97.11" "108.138.113.61" "3.167.84.59" "13.226.103.33" "3.167.97.25" "13.35.90.37" "108.138.125.49" "18.164.131.33" "54.230.244.199" "3.168.65.55"
+  "23.2.16.91" "3.168.96.153" "18.238.59.109" "13.226.103.130" "143.204.85.222" "3.163.224.108" "13.33.251.62" "18.164.93.68" "54.230.129.115" "18.238.79.160"
+  "3.170.229.84" "23.33.184.240" "13.35.90.172" "3.171.198.5" "143.204.85.69" "143.204.80.115" "3.163.198.82" "143.204.80.14" "143.204.80.78" "3.168.245.54"
+  "13.35.90.75" "3.173.250.13" "108.139.46.217" "18.164.173.83" "18.173.219.47" "3.171.131.175" "3.171.131.30" "18.238.79.189" "3.166.205.108" "3.166.205.128"
+  "23.2.16.81" "108.138.113.28" "3.168.245.120" "18.238.50.63"
 )
 spinner="/-\|"
 i=0
@@ -790,7 +816,7 @@ ACCEPT_IPS=(
  "202.81.119.9" "202.81.119.7" "202.81.97.160" "202.81.99.19" "202.81.119.4" "202.81.99.11" "202.81.99.13"
  "202.81.99.10" "202.81.99.7" "202.81.119.14" "202.81.97.158" "202.81.99.9" "202.81.119.13"
  "202.81.119.8" "202.81.99.8" "202.81.99.6" "202.81.99.17" "202.81.99.12" "202.81.99.15"
- "202.81.99.20" "202.81.97.163"
+ "202.81.99.20" "202.81.97.163" "202.81.99.14" "202.81.199.8" "202.81.199.12"
 )
 spinner="/-\|"
 i=0
