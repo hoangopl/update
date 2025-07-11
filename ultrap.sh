@@ -5,18 +5,6 @@ YELLOW='\e[1;33m'
 BLUE='\e[1;34m'
 ORANGE='\033[38;5;208m'
 RESET='\e[0m'
-FILE="$(realpath "$0")"
-BASENAME=$(basename "$FILE")
-HASH_URL="https://raw.githubusercontent.com/hoangopl/update/refs/heads/main/hash.txt"
-LOCAL_HASH=$(sha512sum "$FILE" | awk '{print $1}')
-REMOTE_HASH=$(curl -s "$HASH_URL" | grep "$BASENAME" | awk '{print $1}')
-if [ "$LOCAL_HASH" == "$REMOTE_HASH" ]; then
-    echo "[+] File hợp lệ"
-else
-    echo "[!] File không hợp lệ - dừng script"
-    exit 1
-fi
-echo "[*] Tiếp tục thực hiện..."
 if [ "$(id -u)" -ne 0 ]; then
   echo -e "${RED}Script này cần quyền root${RESET}"
   exit 1
