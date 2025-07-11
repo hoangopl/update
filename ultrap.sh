@@ -9,11 +9,11 @@ FILE="$(realpath "$0")"
 BASENAME=$(basename "$FILE")
 HASH_URL="https://raw.githubusercontent.com/hoangopl/update/refs/heads/main/hash.txt"
 LOCAL_HASH=$(sha512sum "$FILE" | awk '{print $1}')
-REMOTE_HASH=$(curl -s "$HASH_URL" | grep "|$BASENAME" | cut -d'|' -f1)
+REMOTE_HASH=$(curl -s "$HASH_URL" | grep "$BASENAME" | awk '{print $1}')
 if [ "$LOCAL_HASH" == "$REMOTE_HASH" ]; then
-    echo -e "${GREEN}[+] File hợp lệ${RESET}"
+    echo "[+] File hợp lệ"
 else
-    echo -e "${RED}[!] File không hợp lệ - dừng script${RESET}"
+    echo "[!] File không hợp lệ - dừng script"
     exit 1
 fi
 echo "[*] Tiếp tục thực hiện..."
