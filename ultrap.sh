@@ -13,19 +13,6 @@ unset LD_PRELOAD
 unset LD_LIBRARY_PATH
 unset LD_AUDIT
 unset FRIDA
-max_delay=1000000000
-for attempt in {1..3}; do
-    start=$(date +%s%N)
-    for i in {1..100000}; do
-        :  
-    done
-    end=$(date +%s%N)
-    elapsed=$((end - start))
-    if (( elapsed > max_delay )); then
-        echo -e "${RED}[!] Execution delay detected${RESET}"
-        exit 1
-    fi
-done
 ptrace_check=$(grep TracerPid /proc/$$/status | awk "{print \$2}")    
 if [ "$ptrace_check" != "0" ]; then    
     echo -e "${RED}[!] Traced via ptrace. Exiting...${RESET}"    
