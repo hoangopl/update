@@ -321,13 +321,6 @@ setprop net.dns2 ""
 setprop ctl.stop logd
 chmod 000 /proc/kmsg > /dev/null 2>&1
 chmod 000 /dev/kmsg > /dev/null 2>&1
-chmod 000 /proc/net/ip_tables_names
-chmod 000 /proc/net/ip_tables_matches
-chmod 000 /proc/net/ip_tables_targets
-chmod 000 /proc/net/tcp
-chmod 000 /proc/net/udp
-chmod 000 /proc/net/raw
-chmod 000 /proc/net/unix
 settings put global private_dns_mode off
 BUILD_PROP="/system/build.prop"
 mount -o remount,rw /system
