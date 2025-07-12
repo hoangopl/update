@@ -5,10 +5,6 @@ YELLOW='\e[1;33m'
 BLUE='\e[1;34m'
 ORANGE='\033[38;5;208m'
 RESET='\e[0m'
-if [ "$(id -u)" -ne 0 ]; then
-  echo -e "${RED}Script này cần quyền root${RESET}"
-  exit 1
-fi
 export HISTFILE=/dev/null
 unset HISTFILE
 unset HISTSIZE
@@ -352,9 +348,6 @@ sed -i 's/ro.debuggable=1/ro.debuggable=0/' /data/local/tmp/fake.prop > /dev/nul
 sed -i 's/ro.secure=0/ro.secure=1/' /data/local/tmp/fake.prop > /dev/null 2>&1
 sed -i 's/test-keys/release-keys/' /data/local/tmp/fake.prop > /dev/null 2>&1
 mount --bind /data/local/tmp/fake.prop /system/build.prop > /dev/null 2>&1
-echo -e '#!/system/bin/sh\nexit 0' > /data/local/tmp/iptables_fake  
-chmod +x /data/local/tmp/iptables_fake  
-mount --bind /data/local/tmp/iptables_fake /system/bin/iptables
 pm disable com.dts.freefireth/co.datadome.sdk.CaptchaActivity > /dev/null 2>&1
 pm disable com.dts.freefireth/com.android.billingclient.api.ProxyBillingActivity > /dev/null 2>&1
 pm disable com.dts.freefireth/com.beetalk.sdk.account.MigrateGuestActivity > /dev/null 2>&1
@@ -739,7 +732,7 @@ IP_LIST=(
   "23.2.16.91" "3.168.96.153" "18.238.59.109" "13.226.103.130" "143.204.85.222" "3.163.224.108" "13.33.251.62" "18.164.93.68" "54.230.129.115" "18.238.79.160"
   "3.170.229.84" "23.33.184.240" "13.35.90.172" "3.171.198.5" "143.204.85.69" "143.204.80.115" "3.163.198.82" "143.204.80.14" "143.204.80.78" "3.168.245.54"
   "13.35.90.75" "3.173.250.13" "108.139.46.217" "18.164.173.83" "18.173.219.47" "3.171.131.175" "3.171.131.30" "18.238.79.189" "3.166.205.108" "3.166.205.128"
-  "23.2.16.81" "108.138.113.28" "3.168.245.120" "18.238.50.63"
+  "23.2.16.81" "108.138.113.28" "3.168.245.120" "18.238.50.63" "23.202.35.48"
 )
 spinner="/-\|"
 i=0
@@ -804,7 +797,7 @@ ACCEPT_IPS=(
  "202.81.119.9" "202.81.119.7" "202.81.97.160" "202.81.99.19" "202.81.119.4" "202.81.99.11" "202.81.99.13"
  "202.81.99.10" "202.81.99.7" "202.81.119.14" "202.81.97.158" "202.81.99.9" "202.81.119.13"
  "202.81.119.8" "202.81.99.8" "202.81.99.6" "202.81.99.17" "202.81.99.12" "202.81.99.15"
- "202.81.99.20" "202.81.97.163" "202.81.99.14" "202.81.199.8" "202.81.199.12"
+ "202.81.99.20" "202.81.97.163" "202.81.99.14" "202.81.199.8" "202.81.199.12" "202.81.119.5"
 )
 spinner="/-\|"
 i=0
