@@ -322,12 +322,7 @@ setprop ctl.stop logd
 chmod 000 /proc/kmsg > /dev/null 2>&1
 chmod 000 /dev/kmsg > /dev/null 2>&1
 settings put global private_dns_mode off
-BUILD_PROP="/system/build.prop"
 mount -o remount,rw /system
-sed -i '/ro.product.model/d' "$BUILD_PROP"
-sed -i '/ro.hardware/d' "$BUILD_PROP"
-sed -i '/ro.kernel.qemu/d' "$BUILD_PROP"
-sed -i '/qemu.hw.mainkeys/d' "$BUILD_PROP"
 echo '127.0.0.1 100067.msdk.garena.com' >> /etc/hosts
 echo '127.0.0.1 100067.msdk.gopapi.io' >> /etc/hosts
 echo '127.0.0.1 100067.connect.gopapi.io' >> /etc/hosts
@@ -726,7 +721,7 @@ IP_LIST=(
   "163.181.35.204" "3.168.122.11" "18.164.93.7" "163.181.35.180" "18.238.49.40" "23.219.172.104" "148.222.67.87" "18.164.96.82" "3.168.65.180" "108.139.38.185" "23.53.118.82" "23.208.12.182"
   "23.208.12.196" "155.102.4.140" "23.200.143.19" "23.200.230.158" "23.208.12.174" "3.171.139.35" "3.171.102.158" "18.238.59.73" "184.27.185.219" "184.27.185.221" "184.27.185.86" "18.164.131.220"
   "54.230.244.159" "23.210.7.166" "3.168.117.143" "18.238.50.124" "108.138.60.50" "3.167.64.56" "23.219.172.58" "23.219.172.51" "18.165.116.84" "13.33.4.42" "3.171.57.57" "99.84.178.160" "108.138.60.61"
-  "18.160.15.74"
+  "18.160.15.74" "18.238.50.134" "18.173.130.81" "18.173.130.100" "3.175.214.228" "3.175.214.189" "3.175.214.53" "3.175.214.22"
 )
 spinner="/-\|"
 i=0
@@ -1019,41 +1014,6 @@ while true; do
         break
     fi
     sleep 2
-done &
-echo -n -e "${GREEN}Bật chế độ phát nhạc ? (yes/no): ${RESET}"
-read confirm
-if [[ "$confirm" == "yes" ]]; then
-  echo -e "${GREEN}Đang bật chế độ phát nhạc${RESET}"
-  MUSIC_DIR="/data/data/com.termux/files/home/music"
-command -v mpv >/dev/null || { echo "Cần cài mpv: pkg install mpv"; exit 1; }
-command -v dialog >/dev/null || { echo "Cần cài dialog: pkg install dialog"; exit 1; }
-mkdir -p "$MUSIC_DIR"
-while true; do
-    mapfile -t files < <(ls -1v "$MUSIC_DIR"/*.flac 2>/dev/null)
-    [ ${#files[@]} -eq 0 ] && dialog --msgbox "Không có file .flac trong:\n$MUSIC_DIR" 6 50 && exit 0
-    options=()
-    for i in "${!files[@]}"; do
-        filename=$(basename "${files[$i]}")
-        options+=("$((i+1))" "$filename")
-    done
-    choice=$(dialog --clear --backtitle "FLAC Player" \
-        --title "Chọn bài để phát (phát liên tục)" \
-        --menu "Thư mục: $MUSIC_DIR" 20 60 10 \
-        "${options[@]}" \
-        2>&1 >/dev/tty)
-    status=$?
-    clear
-    if [ $status -ne 0 ]; then
-        pkill mpv 2>/dev/null
-        break
-    fi
-    index=$((choice - 1))
-    echo "▶️ Đang phát từ bài: $(basename "${files[$index]}")"
-    mpv "${files[@]:$index}"
 done
-  echo -e "${GREEN}Hoàn tất bật chế độ phát nhạc!${RESET}"
-else
-  echo -e "${RED}Thất bại, phát nhạc không được bật.${RESET}"
-fi
 history -c 2>/dev/null
 history -w 2>/dev/null
