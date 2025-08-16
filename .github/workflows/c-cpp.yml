@@ -1,0 +1,26 @@
+name: Kali Linux Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  kali:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Add Kali repo
+        run: |
+          sudo sh -c 'echo "deb http://http.kali.org/kali kali-rolling main contrib non-free non-free-firmware" > /etc/apt/sources.list.d/kali.list'
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ED444FF07D8D0BF6
+          sudo apt update
+
+      - name: Install Kali tools
+        run: |
+          sudo apt install -y kali-linux-full
+
+      - name: Run your Kali commands
+        run: |
+          echo "Running Nmap in Kali..."
+          nmap --version
