@@ -1,3 +1,12 @@
+name: Build eBPF
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:   # cho phép chạy tay trong Actions tab
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -13,7 +22,7 @@ jobs:
         run: |
           sudo make -C /usr/src/linux-headers-$(uname -r) headers_install INSTALL_HDR_PATH=/tmp/kernel-headers
 
-      - name: Build
+      - name: Build eBPF
         run: |
           clang -O2 -g -target bpf \
             -I/tmp/kernel-headers/include \
