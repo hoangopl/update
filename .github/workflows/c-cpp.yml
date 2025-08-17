@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4   # cũng nên update lên v4
 
       - name: Download Android NDK
         run: |
@@ -26,7 +26,7 @@ jobs:
           aarch64-linux-android21-clang++ overlay.cpp -o overlay -landroid -llog
 
       - name: Upload binary
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: overlay-aarch64
           path: overlay
