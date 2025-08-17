@@ -31,7 +31,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: aosp_headers
-        key: ${{ runner.os }}-aosp-headers-r2
+        key: ${{ runner.os }}-aosp-headers-r3
 
     - name: Download AOSP headers
       if: steps.cache.outputs.cache-hit != 'true'
@@ -39,10 +39,6 @@ jobs:
         mkdir -p aosp_headers
         cd aosp_headers
         git clone --depth=1 https://android.googlesource.com/platform/frameworks/native
-        git clone --depth=1 https://android.googlesource.com/platform/frameworks/native/aidl
-        git clone --depth=1 https://android.googlesource.com/platform/system/core
-        git clone --depth=1 https://android.googlesource.com/platform/frameworks/base
-        git clone --depth=1 https://android.googlesource.com/platform/frameworks/av
 
     - name: Build with NDK + AOSP headers
       run: |
@@ -53,10 +49,8 @@ jobs:
         $TOOLCHAIN/bin/${ARCH}-linux-android${API}-clang++ \
           -shared -fPIC overlay.cpp -o liboverlay.so \
           -I$PWD/aosp_headers/native/include \
-          -I$PWD/aosp_headers/native/aidl/gui \
-          -I$PWD/aosp_headers/core/libutils/include \
-          -I$PWD/aosp_headers/base/include \
-          -I$PWD/aosp_headers/av/include \
+          -I$PWD/aosp_headers/native/libs/gui/include \
+          -I$PWD/aosp_headers/native/include \
           -I$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include
 
     - name: Upload artifact
