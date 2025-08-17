@@ -1,52 +1,48 @@
-name: Build Overlay
+name: Android Build
 
 on:
   push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout source
+      uses: actions/checkout@v3
 
-      - name: Setup NDK
-        run: |
-          curl -L https://dl.google.com/android/repository/android-ndk-r27c-linux.zip -o ndk.zip
-          unzip -q ndk.zip
-          mv android-ndk-r27c ndk
+    - name: Download Android NDK
+      run: |
+        wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip -O ndk.zip
+        unzip -q ndk.zip
+        mv android-ndk-r27c $HOME/ndk
 
-      - name: Clone AOSP headers
-        run: |
-          mkdir -p aosp_headers
-          git clone --depth=1 https://android.googlesource.com/platform/frameworks/native aosp_headers/native
-          git clone --depth=1 https://android.googlesource.com/platform/frameworks/av aosp_headers/av
-          git clone --depth=1 https://android.googlesource.com/platform/frameworks/base aosp_headers/base
+    - name: Prepare AOSP headers
+      run: |
+        mkdir -p $HOME/aosp_headers
+        git clone --depth=1 https://android.googlesource.com/platform/frameworks/native $HOME/aosp_headers/native
+        git clone --depth=1 https://android.googlesource.com/platform/frameworks/av $HOME/aosp_headers/av
+        git clone --depth=1 https://android.googlesource.com/platform/frameworks/base $HOME/aosp_headers/base
 
-          # Fix missing FrameTimelineInfo.h
-          mkdir -p aosp_headers/native/include/android/gui
-          find aosp_headers/native -name "FrameTimelineInfo.h" -exec cp {} aosp_headers/native/include/android/gui/ \; || true
+        # copy thiếu file
+        mkdir -p $HOME/aosp_headers/native/include/android/gui
+        find $HOME/aosp_headers/native -name "FrameTimelineInfo.h" -exec cp {} $HOME/aosp_headers/native/include/android/gui/ \; || true
+        find $HOME/aosp_headers/base -name "com_android_graphics_libgui_flags.h" -exec cp {} $HOME/aosp_headers/native/include/ \; || true
 
-          # Fix missing com_android_graphics_libgui_flags.h
-          mkdir -p aosp_headers/native/include
-          find aosp_headers/base -name "com_android_graphics_libgui_flags.h" -exec cp {} aosp_headers/native/include/ \; || true
+    - name: Build .so library
+      run: |
+        export NDK=$HOME/ndk
+        $NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
+          -I$HOME/aosp_headers/native/include \
+          -I$HOME/aosp_headers/av/include \
+          -I$HOME/aosp_headers/base/core/java \
+          -std=c++17 \
+          -fPIC -shared overlay.cpp -o liboverlay.so
 
-      - name: Build overlay
-        run: |
-          export NDK=$PWD/ndk
-          $NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
-            -I./aosp_headers/native/include \
-            -I./aosp_headers/av/include \
-            -I./aosp_headers/base/core/java \
-            -std=c++17 \
-            -fPIC -shared overlay.cpp -o liboverlay.so
-
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: overlay-lib
-          path: liboverlay.so
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: android-lib
+        path: liboverlay.so
