@@ -1,34 +1,20 @@
-name: Build Android Overlay (SurfaceControl)
+name: Build Overlay
 
 on:
-  workflow_dispatch:
   push:
+    branches: [ "main" ]
+  pull_request:
     branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+    - name: Checkout source
+      uses: actions/checkout@v3
 
-      - name: Download Android NDK
-        run: |
-          wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
-          unzip -q android-ndk-r27c-linux.zip
-          mv android-ndk-r27c ndk
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y g++
 
-      - name: Build overlay (arm64)
-        run: |
-          export NDK=$GITHUB_WORKSPACE/ndk
-          export PATH=$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-          aarch64-linux-android21-clang++ overlay.cpp -o overlay \
-            -Iinclude \
-            -llog -landroid -lEGL -lGLESv2
-
-      - name: Upload binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: overlay-aarch64
-          path: overlay
+    - name: Build overlay
+      run: g++ -O2 -o overlay overlay.cpp
