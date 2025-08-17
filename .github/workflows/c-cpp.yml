@@ -1,4 +1,4 @@
-name: Android NDK Build
+name: Android NDK Build with AOSP headers
 
 on:
   push:
@@ -20,11 +20,24 @@ jobs:
         unzip -q android-ndk-r27c-linux.zip
         mv android-ndk-r27c ndk
 
-    - name: Build with NDK
+    - name: Download minimal AOSP headers
+      run: |
+        mkdir aosp_headers
+        cd aosp_headers
+        # Lấy một số header cần thiết từ AOSP (chỉ include chứ không build)
+        git clone --depth=1 https://android.googlesource.com/platform/frameworks/native
+        git clone --depth=1 https://android.googlesource.com/platform/system/core
+        git clone --depth=1 https://android.googlesource.com/platform/frameworks/base
+
+    - name: Build with NDK + AOSP headers
       run: |
         export NDK=$PWD/ndk
         export TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/linux-x86_64
         export API=21
         export ARCH=aarch64
         $TOOLCHAIN/bin/${ARCH}-linux-android${API}-clang++ \
-          -shared -fPIC overlay.cpp -o liboverlay.so
+          -shared -fPIC overlay.cpp -o liboverlay.so \
+          -I$PWD/aosp_headers/native/include \
+          -I$PWD/aosp_headers/core/libutils/include \
+          -I$PWD/aosp_headers/base/include \
+          -I$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include
