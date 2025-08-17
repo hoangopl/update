@@ -11,18 +11,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Checkout source code
     - name: Checkout source
       uses: actions/checkout@v4
 
-    # 2. Cache NDK
     - name: Cache Android NDK
       uses: actions/cache@v4
       with:
         path: ndk
         key: ${{ runner.os }}-ndk-r27c
 
-    # 3. Download NDK (nếu chưa có cache)
     - name: Download Android NDK
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
@@ -30,25 +27,23 @@ jobs:
         unzip -q android-ndk-r27c-linux.zip
         mv android-ndk-r27c ndk
 
-    # 4. Cache AOSP headers
     - name: Cache AOSP headers
       uses: actions/cache@v4
       with:
         path: aosp_headers
-        key: ${{ runner.os }}-aosp-headers-r1
+        key: ${{ runner.os }}-aosp-headers-r2
 
-    # 5. Download minimal AOSP headers (nếu chưa có cache)
     - name: Download AOSP headers
       if: steps.cache.outputs.cache-hit != 'true'
       run: |
         mkdir -p aosp_headers
         cd aosp_headers
         git clone --depth=1 https://android.googlesource.com/platform/frameworks/native
+        git clone --depth=1 https://android.googlesource.com/platform/frameworks/native/aidl
         git clone --depth=1 https://android.googlesource.com/platform/system/core
         git clone --depth=1 https://android.googlesource.com/platform/frameworks/base
         git clone --depth=1 https://android.googlesource.com/platform/frameworks/av
 
-    # 6. Build với NDK + headers
     - name: Build with NDK + AOSP headers
       run: |
         export NDK=$PWD/ndk
@@ -58,13 +53,12 @@ jobs:
         $TOOLCHAIN/bin/${ARCH}-linux-android${API}-clang++ \
           -shared -fPIC overlay.cpp -o liboverlay.so \
           -I$PWD/aosp_headers/native/include \
-          -I$PWD/aosp_headers/native/aidl/gui/include \
+          -I$PWD/aosp_headers/native/aidl/gui \
           -I$PWD/aosp_headers/core/libutils/include \
           -I$PWD/aosp_headers/base/include \
           -I$PWD/aosp_headers/av/include \
           -I$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include
 
-    # 7. Upload artifact (fix v4)
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
