@@ -1,4 +1,4 @@
-name: Android NDK Build with AOSP headers
+name: Android NDK Build with Extended AOSP headers
 
 on:
   push:
@@ -20,14 +20,14 @@ jobs:
         unzip -q android-ndk-r27c-linux.zip
         mv android-ndk-r27c ndk
 
-    - name: Download minimal AOSP headers
+    - name: Download AOSP headers
       run: |
         mkdir aosp_headers
         cd aosp_headers
-        # Lấy một số header cần thiết từ AOSP (chỉ include chứ không build)
         git clone --depth=1 https://android.googlesource.com/platform/frameworks/native
         git clone --depth=1 https://android.googlesource.com/platform/system/core
         git clone --depth=1 https://android.googlesource.com/platform/frameworks/base
+        git clone --depth=1 https://android.googlesource.com/platform/frameworks/av
 
     - name: Build with NDK + AOSP headers
       run: |
@@ -38,6 +38,14 @@ jobs:
         $TOOLCHAIN/bin/${ARCH}-linux-android${API}-clang++ \
           -shared -fPIC overlay.cpp -o liboverlay.so \
           -I$PWD/aosp_headers/native/include \
+          -I$PWD/aosp_headers/native/aidl/gui/include \
           -I$PWD/aosp_headers/core/libutils/include \
           -I$PWD/aosp_headers/base/include \
+          -I$PWD/aosp_headers/av/include \
           -I$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: liboverlay
+        path: liboverlay.so
