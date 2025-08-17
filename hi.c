@@ -1,11 +1,9 @@
 #include <linux/bpf.h>
 #include <bpf/bpf_helpers.h>
 
-SEC("tracepoint/syscalls/sys_enter_execve")
-int bpf_prog(void *ctx) {
-    char msg[] = "Hello, eBPF!";
-    bpf_trace_printk(msg, sizeof(msg));
-    return 0;
+SEC("xdp")
+int xdp_prog(struct xdp_md *ctx) {
+    return XDP_PASS;
 }
 
 char _license[] SEC("license") = "GPL";
