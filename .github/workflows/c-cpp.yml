@@ -2,24 +2,23 @@ name: Build Overlay
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup NDK
         run: |
-          wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
-          unzip -q android-ndk-r27c-linux.zip -d $PWD
+          curl -L https://dl.google.com/android/repository/android-ndk-r27c-linux.zip -o ndk.zip
+          unzip -q ndk.zip
           mv android-ndk-r27c ndk
-          echo "NDK=$PWD/ndk" >> $GITHUB_ENV
 
       - name: Clone AOSP headers
         run: |
@@ -28,12 +27,17 @@ jobs:
           git clone --depth=1 https://android.googlesource.com/platform/frameworks/av aosp_headers/av
           git clone --depth=1 https://android.googlesource.com/platform/frameworks/base aosp_headers/base
 
-          # Copy missing headers if needed
-          find aosp_headers/base -name "com_android_graphics_libgui_flags.h" -exec cp {} aosp_headers/native/include/ \; || true
+          # Fix missing FrameTimelineInfo.h
+          mkdir -p aosp_headers/native/include/android/gui
           find aosp_headers/native -name "FrameTimelineInfo.h" -exec cp {} aosp_headers/native/include/android/gui/ \; || true
 
-      - name: Build overlay.cpp
+          # Fix missing com_android_graphics_libgui_flags.h
+          mkdir -p aosp_headers/native/include
+          find aosp_headers/base -name "com_android_graphics_libgui_flags.h" -exec cp {} aosp_headers/native/include/ \; || true
+
+      - name: Build overlay
         run: |
+          export NDK=$PWD/ndk
           $NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
             -I./aosp_headers/native/include \
             -I./aosp_headers/av/include \
