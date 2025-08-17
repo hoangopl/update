@@ -1,34 +1,32 @@
-name: Build eBPF
+name: Build Android Overlay
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-  workflow_dispatch:   # cho phép chạy tay trong Actions tab
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout source
+        uses: actions/checkout@v3
 
-      - name: Install deps
+      - name: Download Android NDK
         run: |
-          sudo apt update
-          sudo apt install -y clang llvm libbpf-dev linux-headers-generic linux-libc-dev build-essential
+          wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
+          unzip -q android-ndk-r27c-linux.zip
+          mv android-ndk-r27c ndk
 
-      - name: Prepare kernel headers
+      - name: Build overlay binary
         run: |
-          sudo make -C /usr/src/linux-headers-$(uname -r) headers_install INSTALL_HDR_PATH=/tmp/kernel-headers
+          export NDK=$GITHUB_WORKSPACE/ndk
+          export PATH=$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
+          aarch64-linux-android21-clang++ overlay.cpp -o overlay -landroid -llog
 
-      - name: Build eBPF
-        run: |
-          clang -O2 -g -target bpf \
-            -I/tmp/kernel-headers/include \
-            -c hi.c -o hi.o
-
-      - uses: actions/upload-artifact@v4
+      - name: Upload binary
+        uses: actions/upload-artifact@v3
         with:
-          name: hi.o
-          path: hi.o
+          name: overlay-aarch64
+          path: overlay
