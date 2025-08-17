@@ -1,4 +1,4 @@
-name: Build Android Overlay
+name: Build Android Overlay (SurfaceControl)
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ jobs:
 
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4   # cũng nên update lên v4
+        uses: actions/checkout@v4
 
       - name: Download Android NDK
         run: |
@@ -19,11 +19,13 @@ jobs:
           unzip -q android-ndk-r27c-linux.zip
           mv android-ndk-r27c ndk
 
-      - name: Build overlay binary
+      - name: Build overlay (arm64)
         run: |
           export NDK=$GITHUB_WORKSPACE/ndk
           export PATH=$NDK/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-          aarch64-linux-android21-clang++ overlay.cpp -o overlay -landroid -llog
+          aarch64-linux-android21-clang++ overlay.cpp -o overlay \
+            -Iinclude \
+            -llog -landroid -lEGL -lGLESv2
 
       - name: Upload binary
         uses: actions/upload-artifact@v4
