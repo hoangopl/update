@@ -1,10 +1,9 @@
-name: Build Overlay for Android 10
+name: Android Overlay Build
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
-    branches: [ "main" ]
 
 jobs:
   build:
@@ -14,30 +13,32 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
 
-    - name: Setup Android NDK
+    - name: Setup NDK
       run: |
-        mkdir -p $HOME/ndk
-        curl -sSL https://dl.google.com/android/repository/android-ndk-r27c-linux.zip -o ndk.zip
-        unzip -q ndk.zip -d $HOME
-        mv $HOME/android-ndk-r27c $HOME/ndk
+        wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
+        unzip -q android-ndk-r27c-linux.zip
+        mv android-ndk-r27c $HOME/ndk
 
-    - name: Clone AOSP headers (Android 10)
+    - name: Clone AOSP headers
       run: |
         mkdir -p $HOME/aosp_headers
-        git clone --depth=1 -b android-10.0.0_r41 https://android.googlesource.com/platform/frameworks/native $HOME/aosp_headers/native
-        git clone --depth=1 -b android-10.0.0_r41 https://android.googlesource.com/platform/system/core $HOME/aosp_headers/system_core
+        git clone --depth=1 https://android.googlesource.com/platform/frameworks/native $HOME/aosp_headers/native
+        git clone --depth=1 https://android.googlesource.com/platform/system/core $HOME/aosp_headers/system_core
 
     - name: Build overlay.so
       run: |
-        $HOME/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
+        $HOME/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ \
+          --target=aarch64-linux-android29 \
+          -D__ANDROID_API__=29 \
           -std=c++17 -fPIC -shared \
           -I$HOME/aosp_headers/native/include \
           -I$HOME/aosp_headers/native/libs/ui/include \
+          -I$HOME/aosp_headers/native/libs/gui/include \
           -I$HOME/aosp_headers/system_core/base/include \
           overlay.cpp -o overlay.so
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       with:
-        name: overlay-android10
+        name: overlay-lib
         path: overlay.so
