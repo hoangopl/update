@@ -1,8 +1,9 @@
-name: Android Build
+name: Build Android 10 Overlay
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
@@ -10,39 +11,46 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout source
+    - name: Checkout repo
       uses: actions/checkout@v4
 
-    - name: Download Android NDK
-      run: |
-        wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip -O ndk.zip
-        unzip -q ndk.zip
-        mv android-ndk-r27c $HOME/ndk
-
-    - name: Prepare AOSP headers
-      run: |
-        mkdir -p $HOME/aosp_headers
-        git clone --depth=1 https://android.googlesource.com/platform/frameworks/native $HOME/aosp_headers/native
-        git clone --depth=1 https://android.googlesource.com/platform/frameworks/av $HOME/aosp_headers/av
-        git clone --depth=1 https://android.googlesource.com/platform/frameworks/base $HOME/aosp_headers/base
-
-        # copy thiếu file
-        mkdir -p $HOME/aosp_headers/native/include/android/gui
-        find $HOME/aosp_headers/native -name "FrameTimelineInfo.h" -exec cp {} $HOME/aosp_headers/native/include/android/gui/ \; || true
-        find $HOME/aosp_headers/base -name "com_android_graphics_libgui_flags.h" -exec cp {} $HOME/aosp_headers/native/include/ \; || true
-
-    - name: Build .so library
+    - name: Setup NDK
       run: |
         export NDK=$HOME/ndk
+        wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip -O ndk.zip
+        unzip -q ndk.zip -d $HOME
+        mv $HOME/android-ndk-r27c $NDK
+        echo "NDK=$NDK" >> $GITHUB_ENV
+
+    - name: Setup Android 10 headers
+      run: |
+        mkdir -p $HOME/aosp_headers
+        cd $HOME/aosp_headers
+        # Clone Android 10 frameworks/native (API 29)
+        git clone https://android.googlesource.com/platform/frameworks/native -b android-10.0.0_r47
+        mkdir -p native/include/android/gui
+        # Fake missing header
+        cat > native/include/android/gui/FrameTimelineInfo.h <<EOF
+        #pragma once
+        namespace android {
+        namespace gui {
+            struct FrameTimelineInfo {
+                int64_t vsyncId = 0;
+                int64_t inputEventId = 0;
+                int64_t presentTime = 0;
+            };
+        }}
+        EOF
+        echo "AOSP_HEADERS=$HOME/aosp_headers" >> $GITHUB_ENV
+
+    - name: Build overlay
+      run: |
         $NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
-          -I$HOME/aosp_headers/native/include \
-          -I$HOME/aosp_headers/av/include \
-          -I$HOME/aosp_headers/base/core/java \
-          -std=c++17 \
-          -fPIC -shared overlay.cpp -o liboverlay.so
+          -I$AOSP_HEADERS/native/include \
+          -shared -fPIC overlay.cpp -o overlay.so
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: android-lib
-        path: liboverlay.so
+        name: overlay-android10
+        path: overlay.so
