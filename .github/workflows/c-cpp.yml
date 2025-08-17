@@ -1,10 +1,10 @@
-name: Build Android 10 Overlay
+name: Build Overlay for Android 10
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   build:
@@ -14,40 +14,27 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
 
-    - name: Setup NDK
+    - name: Setup Android NDK
       run: |
-        export NDK=$HOME/ndk
-        wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip -O ndk.zip
+        mkdir -p $HOME/ndk
+        curl -sSL https://dl.google.com/android/repository/android-ndk-r27c-linux.zip -o ndk.zip
         unzip -q ndk.zip -d $HOME
-        mv $HOME/android-ndk-r27c $NDK
-        echo "NDK=$NDK" >> $GITHUB_ENV
+        mv $HOME/android-ndk-r27c $HOME/ndk
 
-    - name: Setup Android 10 headers
+    - name: Clone AOSP headers (Android 10)
       run: |
         mkdir -p $HOME/aosp_headers
-        cd $HOME/aosp_headers
-        # Clone Android 10 frameworks/native (API 29)
-        git clone https://android.googlesource.com/platform/frameworks/native -b android-10.0.0_r47
-        mkdir -p native/include/android/gui
-        # Fake missing header
-        cat > native/include/android/gui/FrameTimelineInfo.h <<EOF
-        #pragma once
-        namespace android {
-        namespace gui {
-            struct FrameTimelineInfo {
-                int64_t vsyncId = 0;
-                int64_t inputEventId = 0;
-                int64_t presentTime = 0;
-            };
-        }}
-        EOF
-        echo "AOSP_HEADERS=$HOME/aosp_headers" >> $GITHUB_ENV
+        git clone --depth=1 -b android-10.0.0_r41 https://android.googlesource.com/platform/frameworks/native $HOME/aosp_headers/native
+        git clone --depth=1 -b android-10.0.0_r41 https://android.googlesource.com/platform/system/core $HOME/aosp_headers/system_core
 
-    - name: Build overlay
+    - name: Build overlay.so
       run: |
-        $NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
-          -I$AOSP_HEADERS/native/include \
-          -shared -fPIC overlay.cpp -o overlay.so
+        $HOME/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
+          -std=c++17 -fPIC -shared \
+          -I$HOME/aosp_headers/native/include \
+          -I$HOME/aosp_headers/native/libs/ui/include \
+          -I$HOME/aosp_headers/system_core/base/include \
+          overlay.cpp -o overlay.so
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
