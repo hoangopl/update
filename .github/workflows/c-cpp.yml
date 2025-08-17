@@ -1,10 +1,11 @@
-name: Android NDK Build with AOSP headers
+name: Build Overlay
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
   build:
@@ -12,49 +13,44 @@ jobs:
 
     steps:
     - name: Checkout source
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
-    - name: Cache Android NDK
-      uses: actions/cache@v4
-      with:
-        path: ndk
-        key: ${{ runner.os }}-ndk-r27c
-
-    - name: Download Android NDK
-      if: steps.cache.outputs.cache-hit != 'true'
+    - name: Setup NDK
       run: |
         wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
         unzip -q android-ndk-r27c-linux.zip
         mv android-ndk-r27c ndk
 
-    - name: Cache AOSP headers
-      uses: actions/cache@v4
-      with:
-        path: aosp_headers
-        key: ${{ runner.os }}-aosp-headers-r3
-
-    - name: Download AOSP headers
-      if: steps.cache.outputs.cache-hit != 'true'
+    - name: Setup AOSP headers
       run: |
         mkdir -p aosp_headers
-        cd aosp_headers
-        git clone --depth=1 https://android.googlesource.com/platform/frameworks/native
+        git clone --depth=1 https://android.googlesource.com/platform/frameworks/native aosp_headers/native || true
+        git clone --depth=1 https://android.googlesource.com/platform/frameworks/base aosp_headers/aidl || true
 
-    - name: Build with NDK + AOSP headers
+    - name: Mock FrameTimelineInfo.h
+      run: |
+        mkdir -p aosp_headers/native/include/android/gui
+        cat > aosp_headers/native/include/android/gui/FrameTimelineInfo.h <<'EOF'
+        #pragma once
+        #include <stdint.h>
+        namespace android::gui {
+        struct FrameTimelineInfo {
+            int64_t vsyncId = 0;
+            int64_t inputEventId = 0;
+        };
+        }
+        EOF
+
+    - name: Build overlay
       run: |
         export NDK=$PWD/ndk
-        export TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/linux-x86_64
-        export API=21
-        export ARCH=aarch64
-        $TOOLCHAIN/bin/${ARCH}-linux-android${API}-clang++ \
-          -shared -fPIC overlay.cpp -o liboverlay.so \
-          -I$PWD/aosp_headers/native/include \
-          -I$PWD/aosp_headers/native/libs/gui/include \
-          -I$PWD/aosp_headers/native/include \
-          -I$NDK/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/include
+        $NDK/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android21-clang++ \
+          -I aosp_headers/native/include \
+          -I aosp_headers/aidl/include \
+          -std=c++17 -shared -fPIC overlay.cpp -o liboverlay.so
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v3
       with:
         name: liboverlay
         path: liboverlay.so
