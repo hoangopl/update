@@ -15,6 +15,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y clang llvm libbpf-dev linux-libc-dev build-essential
+          sudo apt install -y linux-headers-$(uname -r) || sudo apt install -y linux-headers-generic
 
       - name: Build
         run: |
