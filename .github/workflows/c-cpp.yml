@@ -1,4 +1,4 @@
-name: Build Overlay
+name: Android NDK Build
 
 on:
   push:
@@ -9,12 +9,22 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
     - name: Checkout source
       uses: actions/checkout@v3
 
-    - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y g++
+    - name: Download Android NDK
+      run: |
+        wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
+        unzip -q android-ndk-r27c-linux.zip
+        mv android-ndk-r27c ndk
 
-    - name: Build overlay
-      run: g++ -O2 -o overlay overlay.cpp
+    - name: Build with NDK
+      run: |
+        export NDK=$PWD/ndk
+        export TOOLCHAIN=$NDK/toolchains/llvm/prebuilt/linux-x86_64
+        export API=21
+        export ARCH=aarch64
+        $TOOLCHAIN/bin/${ARCH}-linux-android${API}-clang++ \
+          -shared -fPIC overlay.cpp -o liboverlay.so
