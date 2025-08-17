@@ -1,27 +1,39 @@
-steps:
-- name: Checkout code
-  uses: actions/checkout@v4
+name: Build Android NDK Project
 
-- name: Set up Java JDK
-  uses: actions/setup-java@v4
-  with:
-    distribution: 'zulu'
-    java-version: '17'
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
 
-- name: Download Android NDK
-  run: |
-    wget https://dl.google.com/android/repository/android-ndk-r21-linux-x86_64.zip -O ndk.zip
-    unzip ndk.zip -d $GITHUB_WORKSPACE/ndk
-    echo "NDK_PATH=$GITHUB_WORKSPACE/ndk/android-ndk-r21" >> $GITHUB_ENV
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-- name: Build with NDK
-  run: |
-    export ANDROID_NDK_HOME=${{ env.NDK_PATH }}
-    cd myoverlay  # Thay bằng thư mục dự án của bạn nếu khác
-    $ANDROID_NDK_HOME/ndk-build
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
 
-- name: Upload build artifacts
-  uses: actions/upload-artifact@v4
-  with:
-    name: myoverlay-build
-    path: myoverlay/libs/**  # Đường dẫn đến file build (thay nếu cần)
+    - name: Set up Java JDK
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    - name: Download Android NDK
+      run: |
+        wget https://dl.google.com/android/repository/android-ndk-r21-linux-x86_64.zip -O ndk.zip
+        unzip ndk.zip -d $GITHUB_WORKSPACE/ndk
+        echo "NDK_PATH=$GITHUB_WORKSPACE/ndk/android-ndk-r21" >> $GITHUB_ENV
+
+    - name: Build with NDK
+      run: |
+        export ANDROID_NDK_HOME=${{ env.NDK_PATH }}
+        cd myoverlay  # Thay bằng thư mục dự án của bạn nếu khác, ví dụ: thư mục chứa overlay.cpp, Android.mk và Application.mk
+        $ANDROID_NDK_HOME/ndk-build
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: myoverlay-build
+        path: myoverlay/libs/**  # Đường dẫn đến file build (thay nếu cần)
