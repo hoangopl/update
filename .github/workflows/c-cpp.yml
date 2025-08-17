@@ -1,28 +1,25 @@
-name: Build eBPF
-
-on:
-  push: { branches: [ "main" ] }
-  pull_request: { branches: [ "main" ] }
-
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Install deps
         run: |
           sudo apt update
-          sudo apt install -y clang llvm libbpf-dev linux-libc-dev build-essential
-          sudo apt install -y linux-headers-$(uname -r) || sudo apt install -y linux-headers-generic
+          sudo apt install -y clang llvm libbpf-dev linux-headers-generic linux-libc-dev build-essential
+
+      - name: Prepare kernel headers
+        run: |
+          sudo make -C /usr/src/linux-headers-$(uname -r) headers_install INSTALL_HDR_PATH=/tmp/kernel-headers
 
       - name: Build
         run: |
-          clang -O2 -g -target bpf -c hi.c -o hi.o
+          clang -O2 -g -target bpf \
+            -I/tmp/kernel-headers/include \
+            -c hi.c -o hi.o
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v4
         with:
           name: hi.o
           path: hi.o
