@@ -1,23 +1,27 @@
 name: Build eBPF
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  push: { branches: [ "main" ] }
+  pull_request: { branches: [ "main" ] }
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install deps
         run: |
           sudo apt update
-          sudo apt install -y clang llvm libelf-dev gcc-multilib build-essential linux-headers-$(uname -r)
+          sudo apt install -y clang llvm libbpf-dev linux-libc-dev build-essential
 
-      - name: Build eBPF program
+      - name: Build
         run: |
-          clang -O2 -target bpf -c hi.c -o hi.o
+          clang -O2 -g -target bpf -c hi.c -o hi.o
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hi.o
+          path: hi.o
