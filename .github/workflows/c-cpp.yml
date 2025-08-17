@@ -29,11 +29,10 @@ jobs:
     - name: Build with NDK
       run: |
         export ANDROID_NDK_HOME=${{ env.NDK_PATH }}
-        cd myoverlay  # Thay bằng thư mục dự án của bạn nếu khác, ví dụ: thư mục chứa overlay.cpp, Android.mk và Application.mk
-        $ANDROID_NDK_HOME/ndk-build
+        $ANDROID_NDK_HOME/ndk-build  # Removed cd myoverlay if files are in root
 
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
       with:
         name: myoverlay-build
-        path: myoverlay/libs/**  # Đường dẫn đến file build (thay nếu cần)
+        path: libs/**  # Adjusted path since files are likely in root
