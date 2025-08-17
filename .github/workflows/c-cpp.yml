@@ -1,44 +1,27 @@
-name: Android Overlay Build
+steps:
+- name: Checkout code
+  uses: actions/checkout@v4
 
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
+- name: Set up Java JDK
+  uses: actions/setup-java@v4
+  with:
+    distribution: 'zulu'
+    java-version: '17'
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
+- name: Download Android NDK
+  run: |
+    wget https://dl.google.com/android/repository/android-ndk-r21-linux-x86_64.zip -O ndk.zip
+    unzip ndk.zip -d $GITHUB_WORKSPACE/ndk
+    echo "NDK_PATH=$GITHUB_WORKSPACE/ndk/android-ndk-r21" >> $GITHUB_ENV
 
-    steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+- name: Build with NDK
+  run: |
+    export ANDROID_NDK_HOME=${{ env.NDK_PATH }}
+    cd myoverlay  # Thay bằng thư mục dự án của bạn nếu khác
+    $ANDROID_NDK_HOME/ndk-build
 
-    - name: Setup NDK
-      run: |
-        wget https://dl.google.com/android/repository/android-ndk-r27c-linux.zip
-        unzip -q android-ndk-r27c-linux.zip
-        mv android-ndk-r27c $HOME/ndk
-
-    - name: Clone AOSP headers
-      run: |
-        mkdir -p $HOME/aosp_headers
-        git clone --depth=1 https://android.googlesource.com/platform/frameworks/native $HOME/aosp_headers/native
-        git clone --depth=1 https://android.googlesource.com/platform/system/core $HOME/aosp_headers/system_core
-
-    - name: Build overlay.so
-      run: |
-        $HOME/ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/clang++ \
-          --target=aarch64-linux-android29 \
-          -D__ANDROID_API__=29 \
-          -std=c++17 -fPIC -shared \
-          -I$HOME/aosp_headers/native/include \
-          -I$HOME/aosp_headers/native/libs/ui/include \
-          -I$HOME/aosp_headers/native/libs/gui/include \
-          -I$HOME/aosp_headers/system_core/base/include \
-          overlay.cpp -o overlay.so
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: overlay-lib
-        path: overlay.so
+- name: Upload build artifacts
+  uses: actions/upload-artifact@v4
+  with:
+    name: myoverlay-build
+    path: myoverlay/libs/**  # Đường dẫn đến file build (thay nếu cần)
