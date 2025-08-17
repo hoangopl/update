@@ -13,7 +13,7 @@ jobs:
 
     steps:
     - name: Checkout source
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Setup NDK
       run: |
@@ -50,7 +50,7 @@ jobs:
           -std=c++17 -shared -fPIC overlay.cpp -o liboverlay.so
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: liboverlay
         path: liboverlay.so
