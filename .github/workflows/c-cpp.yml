@@ -17,30 +17,24 @@ jobs:
       uses: actions/checkout@v3
 
     - name: Set up Android NDK
-      uses: android-actions/setup-ndk@v1
+      uses: android-ndk/setup-ndk@v1  # Đã sửa lỗi: tên action chính xác
       with:
-        ndk-version: '21.4.7075529'  # Hoặc phiên bản NDK mong muốn
+        ndk: '21.4.7075529'            # Cú pháp đã thay đổi, dùng 'ndk' thay vì 'ndk-version'
 
     - name: Build with Android NDK
       run: |
-        # Đặt các biến môi trường cần thiết cho NDK
         export NDK_ROOT=$ANDROID_NDK_HOME
         export PATH=$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
 
-        # Tên tệp đầu ra của bạn
         APP_NAME=OverlayApp
 
-        # Gọi trình biên dịch
-        # Cờ -o để chỉ định tên file đầu ra
-        # Cờ -fpermissive để bỏ qua một số lỗi tiêu chuẩn C++
-        # Cờ -landroid -lEGL -lGLESv2 -lgnustl_shared để liên kết các thư viện cần thiết
         clang++ Overlay.cpp -o $APP_NAME -fpermissive -landroid -lEGL -lGLESv2 -lgnustl_shared
 
     - name: List built files
       run: ls -l
       
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4  # Đã sửa lỗi: cập nhật lên v4
       with:
         name: android-app
         path: OverlayApp
