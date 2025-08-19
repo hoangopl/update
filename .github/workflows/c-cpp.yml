@@ -1,38 +1,47 @@
-name: Build Android NDK Project
+name: Android Overlay Build
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
 
 jobs:
-  build:
+  build-android-ndk:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
-    - name: Set up Java JDK
-      uses: actions/setup-java@v4
+    - name: Set up Android NDK
+      uses: android-actions/setup-ndk@v1
       with:
-        distribution: 'zulu'
-        java-version: '17'
+        ndk-version: '21.4.7075529'  # Hoặc phiên bản NDK mong muốn
 
-    - name: Download Android NDK
+    - name: Build with Android NDK
       run: |
-        wget https://dl.google.com/android/repository/android-ndk-r21-linux-x86_64.zip -O ndk.zip
-        unzip ndk.zip -d $GITHUB_WORKSPACE/ndk
-        echo "NDK_PATH=$GITHUB_WORKSPACE/ndk/android-ndk-r21" >> $GITHUB_ENV
+        # Đặt các biến môi trường cần thiết cho NDK
+        export NDK_ROOT=$ANDROID_NDK_HOME
+        export PATH=$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
 
-    - name: Build with NDK
-      run: |
-        export ANDROID_NDK_HOME=${{ env.NDK_PATH }}
-        $ANDROID_NDK_HOME/ndk-build  # Removed cd myoverlay if files are in root
+        # Tên tệp đầu ra của bạn
+        APP_NAME=OverlayApp
 
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
+        # Gọi trình biên dịch
+        # Cờ -o để chỉ định tên file đầu ra
+        # Cờ -fpermissive để bỏ qua một số lỗi tiêu chuẩn C++
+        # Cờ -landroid -lEGL -lGLESv2 -lgnustl_shared để liên kết các thư viện cần thiết
+        clang++ Overlay.cpp -o $APP_NAME -fpermissive -landroid -lEGL -lGLESv2 -lgnustl_shared
+
+    - name: List built files
+      run: ls -l
+      
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
       with:
-        name: myoverlay-build
-        path: libs/**  # Adjusted path since files are likely in root
+        name: android-app
+        path: OverlayApp
+        
