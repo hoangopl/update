@@ -47,7 +47,7 @@ jobs:
         
         # Gọi trình biên dịch clang++
         echo "Building the overlay application..."
-        clang++ Overlay.cpp -o $APP_NAME -fpermissive -landroid -lEGL -lGLESv2 -lgnustl_shared
+        clang++ overlay.cpp -o $APP_NAME -fpermissive -landroid -lEGL -lGLESv2 -lgnustl_shared
         
         echo "Build complete."
 
