@@ -43,10 +43,10 @@ jobs:
         fi
         
         # Tên tệp đầu ra của bạn
-        APP_NAME=OverlayApp
+        APP_NAME=overlayApp
         
         # Gọi trình biên dịch clang++
-        echo "Building the Overlay application..."
+        echo "Building the overlay application..."
         clang++ Overlay.cpp -o $APP_NAME -fpermissive -landroid -lEGL -lGLESv2 -lgnustl_shared
         
         echo "Build complete."
