@@ -9,33 +9,52 @@ on:
       - main
 
 jobs:
-  build-android-ndk:
+  build:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v3
 
-    - name: Set up Android NDK
-      uses: android-ndk-r21-setup@v1  # Sử dụng action khác
-      with:
-        ndk-version: '21.4.7075529'   # Phiên bản NDK của bạn
+    - name: Download and Unzip Android NDK
+      run: |
+        # URL của Android NDK r21d
+        NDK_URL="https://dl.google.com/android/repository/android-ndk-r21d-linux-x86_64.zip"
+        NDK_DIR="android-ndk-r21d"
+
+        echo "Downloading Android NDK from $NDK_URL..."
+        wget -q $NDK_URL
+        
+        echo "Unzipping the NDK package..."
+        unzip -q android-ndk-r21d-linux-x86_64.zip
+        
+        # Thiết lập biến môi trường
+        echo "ANDROID_NDK_HOME=$PWD/$NDK_DIR" >> $GITHUB_ENV
+        echo "$PWD/$NDK_DIR/toolchains/llvm/prebuilt/linux-x86_64/bin" >> $GITHUB_PATH
+        
+        echo "Android NDK setup complete."
 
     - name: Build with Android NDK
       run: |
-        export NDK_ROOT=$ANDROID_NDK_HOME
-        export PATH=$NDK_ROOT/toolchains/llvm/prebuilt/linux-x86_64/bin:$PATH
-
+        # Đảm bảo các biến môi trường đã được thiết lập
+        if [ -z "$ANDROID_NDK_HOME" ]; then
+          echo "Error: ANDROID_NDK_HOME is not set."
+          exit 1
+        fi
+        
+        # Tên tệp đầu ra của bạn
         APP_NAME=OverlayApp
-
+        
+        # Gọi trình biên dịch clang++
+        echo "Building the Overlay application..."
         clang++ Overlay.cpp -o $APP_NAME -fpermissive -landroid -lEGL -lGLESv2 -lgnustl_shared
+        
+        echo "Build complete."
 
-    - name: List built files
-      run: ls -l
-      
-    - name: Upload artifact
+    - name: Upload built application as artifact
       uses: actions/upload-artifact@v4
       with:
         name: android-app
         path: OverlayApp
+        retention-days: 7
         
