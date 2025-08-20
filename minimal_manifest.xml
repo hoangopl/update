@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest>
+  <!-- AOSP base manifest -->
+  <remote  name="aosp"
+           fetch="https://android.googlesource.com/" />
+
+  <!-- Tool để build hidl-gen -->
+  <project path="system/tools/hidl"
+           name="platform/system/tools/hidl"
+           revision="android-10.0.0_r1" remote="aosp" />
+
+  <!-- HAL interfaces cần thiết -->
+  <project path="hardware/interfaces"
+           name="platform/hardware/interfaces"
+           revision="android-10.0.0_r1" remote="aosp" />
+
+  <!-- HIDL runtime -->
+  <project path="system/libhidl"
+           name="platform/system/libhidl"
+           revision="android-10.0.0_r1" remote="aosp" />
+
+  <!-- Một số dependency nhỏ -->
+  <project path="system/core"
+           name="platform/system/core"
+           revision="android-10.0.0_r1" remote="aosp" />
+
+  <project path="build/make"
+           name="platform/build"
+           revision="android-10.0.0_r1" remote="aosp" />
+
+  <project path="build/soong"
+           name="platform/build/soong"
+           revision="android-10.0.0_r1" remote="aosp" />
+
+  <project path="external/selinux"
+           name="platform/external/selinux"
+           revision="android-10.0.0_r1" remote="aosp" />
+
+  <!-- Các file cấu hình cơ bản -->
+  <default revision="android-10.0.0_r1"
+           remote="aosp"
+           sync-j="4" />
+</manifest>
