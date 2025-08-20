@@ -1,0 +1,45 @@
+name: Build hidl-gen
+
+on:
+  workflow_dispatch:   # cho phép chạy thủ công
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y openjdk-8-jdk python-is-python3 flex bison g++ make zip curl zlib1g-dev
+
+      - name: Clone minimal AOSP repos
+        run: |
+          mkdir hidl-gen-build && cd hidl-gen-build
+          git clone https://android.googlesource.com/platform/build build
+          git clone https://android.googlesource.com/platform/system/tools/hidl system/tools/hidl
+          git clone https://android.googlesource.com/platform/system/libhidl system/libhidl
+          git clone https://android.googlesource.com/platform/system/libbase system/libbase
+          git clone https://android.googlesource.com/platform/system/core system/core
+          cd build && git checkout android-10.0.0_r47 && cd ..
+          cd system/tools/hidl && git checkout android-10.0.0_r47 && cd ..
+          cd system/libhidl && git checkout android-10.0.0_r47 && cd ..
+          cd system/libbase && git checkout android-10.0.0_r47 && cd ..
+          cd system/core && git checkout android-10.0.0_r47 && cd ..
+
+      - name: Build hidl-gen
+        run: |
+          cd hidl-gen-build
+          source build/envsetup.sh
+          lunch aosp_arm-eng
+          m hidl-gen
+
+      - name: Upload hidl-gen binary
+        uses: actions/upload-artifact@v3
+        with:
+          name: hidl-gen
+          path: hidl-gen-build/out/host/linux-x86/bin/hidl-gen
