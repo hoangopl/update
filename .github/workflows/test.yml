@@ -1,0 +1,44 @@
+name: Build AOSP with Google Drive
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Cài rclone
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rclone fuse
+
+      - name: Setup rclone config
+        run: |
+          mkdir -p ~/.config/rclone
+          echo "${{ secrets.RCLONE_CONF }}" > ~/.config/rclone/rclone.conf
+
+      - name: Mount Google Drive
+        run: |
+          mkdir -p /mnt/gdrive
+          nohup rclone mount gdrive:/aosp /mnt/gdrive --daemon --vfs-cache-mode writes &
+
+      - name: Chờ mount ổ
+        run: sleep 10
+
+      - name: Kiểm tra dung lượng
+        run: df -h /mnt/gdrive
+
+      - name: Sync source code vào Google Drive
+        run: |
+          rsync -av --progress ./ /mnt/gdrive/source
+
+      - name: Build AOSP
+        run: |
+          cd /mnt/gdrive/source
+          source build/envsetup.sh
+          lunch aosp_arm-eng
+          make -j$(nproc)
