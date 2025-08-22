@@ -1,4 +1,4 @@
-name: Build AOSP with Google Drive + ccache
+name: Build AOSP Android 10
 
 on:
   workflow_dispatch:
@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+    timeout-minutes: 1440   # cho phép chạy tối đa 24h
 
     steps:
       - name: Checkout repo
@@ -14,7 +15,10 @@ jobs:
       - name: Install deps + rclone + ccache
         run: |
           sudo apt-get update
-          sudo apt-get install -y rclone fuse ccache
+          sudo apt-get install -y git-core gnupg flex bison gperf build-essential \
+            zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
+            lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z-dev ccache \
+            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig rclone fuse python-is-python3
 
       - name: Setup rclone config
         run: |
@@ -25,14 +29,22 @@ jobs:
         run: |
           mkdir -p ~/gdrive
           nohup rclone mount gdrive:/aosp ~/gdrive --daemon --vfs-cache-mode writes &
-          sleep 10
+          sleep 15
+          df -h ~/gdrive
 
-      - name: Check disk space
-        run: df -h ~/gdrive
-
-      - name: Sync source to Google Drive
+      - name: Get AOSP source
         run: |
-          rsync -av --progress ./ ~/gdrive/source
+          cd ~/gdrive
+          mkdir -p source
+          cd source
+          if [ ! -f build/envsetup.sh ]; then
+            echo ">>> Init repo..."
+            repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
+            echo ">>> Sync source (có thể mất vài giờ)..."
+            repo sync -c -j2 --no-clone-bundle --no-tags
+          else
+            echo "Source đã tồn tại, skip sync."
+          fi
 
       - name: Enable ccache
         run: |
@@ -48,14 +60,14 @@ jobs:
           export CCACHE_DIR=~/gdrive/ccache
           source build/envsetup.sh
           lunch aosp_arm-eng
-          make -j$(nproc)
+          make -j2
 
       - name: Save ccache stats
         run: |
           ccache -s
 
-      - name: Upload output (optional)
+      - name: Save output
         run: |
           mkdir -p ~/artifacts
           cp -r ~/gdrive/source/out/target/product/* ~/artifacts/ || true
-          echo "Artifacts saved in ~/artifacts"
+          echo "Artifacts đã được lưu vào ~/artifacts"
