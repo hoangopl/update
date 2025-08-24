@@ -1,5 +1,20 @@
-- name: Debug check
+name: Test Workflow
+
+on:
+  workflow_dispatch:   # bạn có thể tự nhấn "Run workflow"
+  push:                # hoặc khi push code sẽ chạy
+
+jobs:
+  test-job:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Debug info
         run: |
           echo "✅ Workflow started"
+          echo "📅 Date: $(date)"
+          echo "💻 System info:"
           uname -a
-          df -h
+          echo "📂 Current directory: $(pwd)"
+          echo "🗂 Files:"
+          ls -lah
