@@ -1,4 +1,4 @@
-name: Build hidl-gen (Android 10 r47, Lightweight)
+name: Build hidl-gen
 
 on:
   workflow_dispatch:
@@ -6,73 +6,44 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
-
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev \
-          gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev \
-          libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-core gnupg flex bison build-essential zip curl \
+            zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev \
+            x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils \
+            xsltproc unzip fontconfig python3
 
-    - name: Setup repo tool
-      run: |
-        mkdir -p ~/bin
-        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-        chmod a+x ~/bin/repo
-        echo "$HOME/bin" >> $GITHUB_PATH
+      - name: Init repo
+        run: |
+          mkdir aosp10 && cd aosp10
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          PATH=~/bin:$PATH repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-    - name: Init AOSP manifest (android-10.0.0_r47)
-      run: |
-        mkdir aosp10 && cd aosp10
-        repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
+      - name: Sync only needed projects
+        run: |
+          cd aosp10
+          PATH=~/bin:$PATH repo sync -c -j$(nproc) \
+            build/soong build/make system/tools/hidl system/libhidl system/core \
+            external/libcxx external/googletest external/golang-protobuf \
+            prebuilts/clang prebuilts/gcc prebuilts/go
 
-    - name: Partial repo sync (deps for hidl-gen)
-      run: |
-        cd aosp10
-        repo sync -c -j$(nproc) \
-          build/make \
-          build/blueprint \
-          build/kati \
-          build/soong \
-          system/core \
-          system/libhidl \
-          system/libfmq \
-          system/tools/hidl \
-          prebuilts/go/linux-x86 \
-          prebuilts/clang/host/linux-x86 \
-          prebuilts/misc \
-          prebuilts/sdk \
-          prebuilts/build-tools \
-          prebuilts/devtools \
-          prebuilts/vndk/v28 \
-          external/golang-protobuf \
-          external/protobuf \
-          external/googletest \
-          external/gflags \
-          external/jemalloc \
-          external/boringssl \
-          external/zlib \
-          external/libcxx
+      - name: Build hidl-gen
+        run: |
+          cd aosp10
+          source build/envsetup.sh
+          lunch aosp_arm-eng
+          ALLOW_MISSING_DEPENDENCIES=true m hidl-gen
 
-    - name: Setup build environment
-      run: |
-        cd aosp10
-        source build/envsetup.sh
-        lunch aosp_arm-eng
-
-    - name: Build hidl-gen (ignore VTS deps)
-      run: |
-        cd aosp10
-        source build/envsetup.sh
-        lunch aosp_arm-eng
-        ALLOW_MISSING_DEPENDENCIES=true m hidl-gen
-
-    - name: Upload hidl-gen binary
-      uses: actions/upload-artifact@v4
-      with:
-        name: hidl-gen
-        path: aosp10/out/host/linux-x86/bin/hidl-gen
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: hidl-gen
+          path: aosp10/out/host/linux-x86/bin/hidl-gen
