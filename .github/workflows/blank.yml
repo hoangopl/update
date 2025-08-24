@@ -1,0 +1,72 @@
+name: Build hidl-gen
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev \
+            gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev \
+            libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
+
+      - name: Setup repo
+        run: |
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Init repo (AOSP 10)
+        run: |
+          mkdir aosp10 && cd aosp10
+          repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
+
+      - name: Add local manifest (minimal for hidl-gen)
+        run: |
+          mkdir -p aosp10/.repo/local_manifests
+          cat > aosp10/.repo/local_manifests/hidl.xml <<'EOF'
+          <?xml version="1.0" encoding="UTF-8"?>
+          <manifest>
+              <project path="build/make" name="platform/build" revision="android-10.0.0_r47" />
+              <project path="build/soong" name="platform/build/soong" revision="android-10.0.0_r47" />
+              <project path="build/blueprint" name="platform/build/blueprint" revision="android-10.0.0_r47" />
+
+              <project path="system/tools/hidl" name="platform/system/tools/hidl" revision="android-10.0.0_r47" />
+              <project path="system/libhidl" name="platform/system/libhidl" revision="android-10.0.0_r47" />
+              <project path="system/core/liblog" name="platform/system/core/liblog" revision="android-10.0.0_r47" />
+              <project path="system/core/base" name="platform/system/core/base" revision="android-10.0.0_r47" />
+
+              <project path="external/libcxx" name="platform/external/libcxx" revision="android-10.0.0_r47" />
+              <project path="external/gtest" name="platform/external/gtest" revision="android-10.0.0_r47" />
+
+              <project path="prebuilts/clang/host/linux-x86" name="platform/prebuilts/clang/host/linux-x86" revision="android-10.0.0_r47" />
+              <project path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8" revision="android-10.0.0_r47" />
+              <project path="prebuilts/go/linux-x86" name="platform/prebuilts/go/linux-x86" revision="android-10.0.0_r47" />
+          </manifest>
+          EOF
+
+      - name: Repo sync minimal
+        run: |
+          cd aosp10
+          repo sync -c -j$(nproc) --no-clone-bundle --no-tags
+
+      - name: Build hidl-gen only
+        run: |
+          cd aosp10
+          source build/envsetup.sh
+          m hidl-gen
+
+      - name: Upload hidl-gen artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hidl-gen
+          path: aosp10/out/host/linux-x86/bin/hidl-gen
