@@ -1,4 +1,4 @@
-name: Build hidl-gen (Android 10 r47, Full Safe)
+name: Build hidl-gen (Android 10 r47, Final)
 
 on:
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
         mkdir aosp10 && cd aosp10
         repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-    - name: Partial repo sync (safe deps for hidl-gen)
+    - name: Partial repo sync (deps for hidl-gen)
       run: |
         cd aosp10
         repo sync -c -j$(nproc) \
@@ -50,7 +50,6 @@ jobs:
           prebuilts/devtools \
           external/golang-protobuf \
           external/protobuf \
-          external/go-cmp \
           external/googletest \
           external/gflags \
           external/gtest \
