@@ -1,4 +1,4 @@
-name: Build hidl-gen (Slim)
+name: Build hidl-gen (Partial Sync)
 
 on:
   workflow_dispatch:
@@ -8,6 +8,9 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
+    - name: Checkout repo
+      uses: actions/checkout@v4
+
     - name: Cài dependencies
       run: |
         sudo apt-get update
@@ -15,16 +18,35 @@ jobs:
           gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev \
           libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
 
-    - name: Clone repos cần thiết
+    - name: Setup repo tool
+      run: |
+        mkdir -p ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+        echo "$HOME/bin" >> $GITHUB_PATH
+
+    - name: Init AOSP (android-10.0.0_r47)
       run: |
         mkdir aosp10 && cd aosp10
-        git clone https://android.googlesource.com/platform/build build -b android-10.0.0_r47
-        git clone https://android.googlesource.com/platform/build/soong build/soong -b android-10.0.0_r47
-        git clone https://android.googlesource.com/platform/system/tools/hidl system/tools/hidl -b android-10.0.0_r47
-        git clone https://android.googlesource.com/platform/system/libbase system/libbase -b android-10.0.0_r47
-        git clone https://android.googlesource.com/platform/system/libhidl system/libhidl -b android-10.0.0_r47
-        git clone https://android.googlesource.com/platform/system/libfmq system/libfmq -b android-10.0.0_r47
-        git clone https://android.googlesource.com/platform/system/core system/core -b android-10.0.0_r47
+        repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
+
+    - name: Partial repo sync (chỉ các project cần thiết)
+      run: |
+        cd aosp10
+        repo sync -c -j$(nproc) \
+          build/make \
+          build/soong \
+          system/core \
+          system/libbase \
+          system/libhidl \
+          system/libfmq \
+          system/tools/hidl
+
+    - name: Thiết lập môi trường build
+      run: |
+        cd aosp10
+        source build/envsetup.sh
+        lunch aosp_arm-eng
 
     - name: Build hidl-gen
       run: |
