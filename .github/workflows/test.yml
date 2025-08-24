@@ -1,4 +1,4 @@
-name: Build hidl-gen (Android 10 r47, Final-Final)
+name: Build hidl-gen (Android 10 r47, VNDK Fixed)
 
 on:
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
         mkdir aosp10 && cd aosp10
         repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-    - name: Partial repo sync (deps for hidl-gen)
+    - name: Partial repo sync (deps for hidl-gen + VNDK)
       run: |
         cd aosp10
         repo sync -c -j$(nproc) \
@@ -48,6 +48,8 @@ jobs:
           prebuilts/sdk \
           prebuilts/build-tools \
           prebuilts/devtools \
+          prebuilts/vndk/v28 \
+          prebuilts/vndk/v29 \
           external/golang-protobuf \
           external/protobuf \
           external/googletest \
