@@ -51,6 +51,7 @@ jobs:
         run: |
           export PATH=~/bin:$PATH
           cd aosp10
+          repo sync -c -j$(nproc) --no-clone-bundle --no-tags
           source build/envsetup.sh
           lunch aosp_arm-eng
           ALLOW_MISSING_DEPENDENCIES=true m hidl-gen
