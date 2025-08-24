@@ -36,7 +36,7 @@ jobs:
         run: |
           export PATH=~/bin:$PATH
           cd aosp10
-          repo sync -c -j$(nproc) --no-tags --no-clone-bundle --depth=1 \
+          repo sync -c -j$(nproc) --no-tags --no-clone-bundle \
             build/soong \
             build/make \
             system/tools/hidl \
