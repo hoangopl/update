@@ -1,4 +1,4 @@
-name: Build hidl-gen (Android 10 r47, Final)
+name: Build hidl-gen (Android 10 r47, Lightweight)
 
 on:
   workflow_dispatch:
@@ -64,12 +64,12 @@ jobs:
         source build/envsetup.sh
         lunch aosp_arm-eng
 
-    - name: Build hidl-gen
+    - name: Build hidl-gen (ignore VTS deps)
       run: |
         cd aosp10
         source build/envsetup.sh
         lunch aosp_arm-eng
-        m hidl-gen
+        ALLOW_MISSING_DEPENDENCIES=true m hidl-gen
 
     - name: Upload hidl-gen binary
       uses: actions/upload-artifact@v4
