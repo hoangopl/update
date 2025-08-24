@@ -1,4 +1,4 @@
-name: Build hidl-gen (Android 10 r47, Final)
+name: Build hidl-gen (Android 10 r47, Final-Final)
 
 on:
   workflow_dispatch:
@@ -52,7 +52,6 @@ jobs:
           external/protobuf \
           external/googletest \
           external/gflags \
-          external/gtest \
           external/jemalloc \
           external/boringssl \
           external/zlib \
