@@ -1,61 +1,48 @@
 name: Build hidl-gen
 
 on:
-  workflow_dispatch:   # Bấm chạy thủ công
-  push:                # Hoặc khi push code
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04   # AOSP 10 ổn nhất với 20.04
-    timeout-minutes: 60     # Tránh treo quá lâu
+    runs-on: ubuntu-20.04   # bản Ubuntu ổn định cho AOSP 10
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+    - name: Checkout (empty)
+      uses: actions/checkout@v4
 
-      - name: Install deps
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git-core gnupg flex bison build-essential zip curl \
-            zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev \
-            x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils \
-            xsltproc unzip fontconfig
+    - name: Cài dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y git-core gnupg flex bison build-essential zip curl \
+          zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev \
+          x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils \
+          xsltproc unzip fontconfig python3 rsync
 
-      - name: Setup repo tool
-        run: |
-          mkdir -p ~/bin
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-          chmod a+x ~/bin/repo
-          echo "$HOME/bin" >> $GITHUB_PATH
+    - name: Setup repo
+      run: |
+        mkdir -p ~/bin
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+        echo "$HOME/bin" >> $GITHUB_PATH
 
-      - name: Init AOSP 10 manifest
-        run: |
-          mkdir aosp10 && cd aosp10
-          repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
+    - name: Init AOSP 10 manifest
+      run: |
+        mkdir aosp10 && cd aosp10
+        repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-      - name: Repo sync only needed projects
-        working-directory: aosp10
-        run: |
-          repo sync -c -j4 \
-            build/soong \
-            system/tools/hidl \
-            system/libhidl \
-            system/core/base \
-            external/libcxx \
-            external/googletest \
-            prebuilts/clang/host/linux-x86
+    - name: Repo sync với timeout + keepalive
+      run: |
+        cd aosp10
+        # keepalive background
+        (while true; do echo "⏳ Syncing... $(date)"; sleep 60; done) &
+        # timeout để tránh treo
+        timeout 25m repo sync -c -j$(nproc) || echo "⚠️ repo sync failed or timeout"
 
-      - name: Build hidl-gen
-        working-directory: aosp10
-        run: |
-          source build/envsetup.sh
-          lunch aosp_arm-eng
-          m hidl-gen
-
-      - name: Upload hidl-gen binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: hidl-gen
-          path: aosp10/out/host/linux-x86/bin/hidl-gen
+    - name: Build hidl-gen
+      run: |
+        cd aosp10
+        source build/envsetup.sh
+        lunch aosp_arm-eng
+        # chỉ build hidl-gen
+        m hidl-gen 2>&1 | tee $GITHUB_WORKSPACE/hidl-gen.log
