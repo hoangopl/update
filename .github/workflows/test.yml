@@ -1,4 +1,4 @@
-name: Build hidl-gen (Android 10 r47, Partial Sync)
+name: Build hidl-gen (Android 10 r47, Partial Sync Full Fix)
 
 on:
   workflow_dispatch:
@@ -30,7 +30,7 @@ jobs:
         mkdir aosp10 && cd aosp10
         repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-    - name: Partial repo sync (only needed projects)
+    - name: Partial repo sync (only needed projects + prebuilts)
       run: |
         cd aosp10
         repo sync -c -j$(nproc) \
@@ -41,7 +41,13 @@ jobs:
           system/core \
           system/libhidl \
           system/libfmq \
-          system/tools/hidl
+          system/tools/hidl \
+          prebuilts/go/linux-x86 \
+          prebuilts/clang/host/linux-x86 \
+          prebuilts/misc \
+          prebuilts/sdk \
+          prebuilts/build-tools \
+          prebuilts/devtools
 
     - name: Setup build environment
       run: |
