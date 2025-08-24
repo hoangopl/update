@@ -24,7 +24,7 @@ jobs:
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
           chmod a+x ~/bin/repo
 
-      - name: Init AOSP 10 repo
+      - name: Init AOSP 10 manifest
         run: |
           export PATH=~/bin:$PATH
           mkdir -p aosp10 && cd aosp10
@@ -32,11 +32,23 @@ jobs:
           git config --global user.email "actions@github.com"
           repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-      - name: Sync entire AOSP (shallow)
+      - name: Sync only required projects
         run: |
           export PATH=~/bin:$PATH
           cd aosp10
-          repo sync -c -j$(nproc) --no-tags --no-clone-bundle --optimized-fetch --prune --depth=1
+          repo sync -c -j$(nproc) --no-tags --no-clone-bundle --depth=1 \
+            build/soong \
+            build/make \
+            system/tools/hidl \
+            system/libhidl \
+            system/libhidl/transport \
+            system/core \
+            external/libcxx \
+            external/gtest \
+            prebuilts/clang/host/linux-x86 \
+            prebuilts/gcc \
+            prebuilts/misc \
+            prebuilts/sdk
 
       - name: Build hidl-gen
         run: |
