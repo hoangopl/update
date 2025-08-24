@@ -1,17 +1,50 @@
-name: Test Runner
+name: Build hidl-gen
 
 on:
-  workflow_dispatch:   # Cho phép bạn chạy thủ công
+  workflow_dispatch:   # chạy thủ công
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps:
-      - name: Start message
-        run: echo "✅ Runner đã khởi động thành công!"
+    timeout-minutes: 120   # tránh treo quá lâu
 
-      - name: Show system info
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup repo tool
         run: |
-          uname -a
-          lsb_release -a || true
-          df -h
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+          echo "$HOME/bin" >> $GITHUB_PATH
+
+      - name: Init AOSP 10
+        run: |
+          mkdir aosp10 && cd aosp10
+          repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
+
+      - name: Sync minimal source for hidl-gen
+        run: |
+          cd aosp10
+          # chỉ sync phần cần thiết để build hidl-gen
+          repo sync -c -j4 system/tools/hidl system/libhidl build/soong external/libcxx system/core external/googletest prebuilts/clang
+
+      - name: Keep-alive log
+        run: |
+          while true; do
+            echo "⏳ build vẫn đang chạy..."
+            sleep 60
+          done &
+          echo "keep-alive job running"
+
+      - name: Build hidl-gen
+        run: |
+          cd aosp10
+          source build/envsetup.sh
+          lunch aosp_arm-eng
+          m hidl-gen -j$(nproc)
+
+      - name: Check hidl-gen
+        run: |
+          file aosp10/out/host/linux-x86/bin/hidl-gen || true
