@@ -1,6 +1,17 @@
+name: Test Runner
+
+on:
+  workflow_dispatch:   # Cho phép bạn chạy thủ công
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Check runner works
-        run: echo "Runner started ✅"
+      - name: Start message
+        run: echo "✅ Runner đã khởi động thành công!"
+
+      - name: Show system info
+        run: |
+          uname -a
+          lsb_release -a || true
+          df -h
