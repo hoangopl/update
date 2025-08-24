@@ -1,44 +1,30 @@
-name: Build hidl-gen (Android 10)
+name: Build hidl-gen (Slim)
 
 on:
-  workflow_dispatch:   # chạy thủ công
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04   # hoặc 20.04 cho ổn định
+    runs-on: ubuntu-22.04
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-
-    - name: Cài đặt dependencies
+    - name: Cài dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev \
           gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev x11proto-core-dev \
           libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
 
-    - name: Thiết lập repo tool
-      run: |
-        mkdir -p ~/bin
-        export PATH=~/bin:$PATH
-        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-        chmod a+x ~/bin/repo
-
-    - name: Lấy source Android 10.0.0_r47
+    - name: Clone repos cần thiết
       run: |
         mkdir aosp10 && cd aosp10
-        ~/bin/repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
-        ~/bin/repo sync -c -j$(nproc)
-
-    - name: Thiết lập môi trường build
-      run: |
-        cd aosp10
-        source build/envsetup.sh
-        lunch aosp_arm-eng
+        git clone https://android.googlesource.com/platform/build build -b android-10.0.0_r47
+        git clone https://android.googlesource.com/platform/build/soong build/soong -b android-10.0.0_r47
+        git clone https://android.googlesource.com/platform/system/tools/hidl system/tools/hidl -b android-10.0.0_r47
+        git clone https://android.googlesource.com/platform/system/libbase system/libbase -b android-10.0.0_r47
+        git clone https://android.googlesource.com/platform/system/libhidl system/libhidl -b android-10.0.0_r47
+        git clone https://android.googlesource.com/platform/system/libfmq system/libfmq -b android-10.0.0_r47
+        git clone https://android.googlesource.com/platform/system/core system/core -b android-10.0.0_r47
 
     - name: Build hidl-gen
       run: |
