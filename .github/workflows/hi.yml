@@ -5,19 +5,18 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
-
+    runs-on: ubuntu-20.04   # AOSP 10 yêu cầu 20.04 ổn định hơn
     steps:
-    - name: Checkout repo (trống)
+    - name: Checkout
       uses: actions/checkout@v4
 
-    - name: Cài gói cần thiết
+    - name: Cài dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y git-core gnupg flex bison build-essential \
-          zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
-          lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
-          libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
+            zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
+            lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
+            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
 
     - name: Cài repo tool
       run: |
@@ -36,11 +35,11 @@ jobs:
         mkdir aosp10 && cd aosp10
         repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-    - name: Sync các repo cần thiết cho hidl-gen
-      working-directory: aosp10
+    - name: Sync tối thiểu cho hidl-gen
       run: |
+        cd aosp10
         repo sync -c -j$(nproc) \
-          build \
+          build/make \
           build/soong \
           build/blueprint \
           system/tools/hidl \
@@ -50,6 +49,7 @@ jobs:
           external/libcxx \
           external/gtest \
           external/googletest \
+          external/protobuf \
           prebuilts/clang/host/linux-x86 \
           prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8 \
           prebuilts/go/linux-x86 \
@@ -57,14 +57,14 @@ jobs:
           prebuilts/vndk/v29
 
     - name: Build hidl-gen
-      working-directory: aosp10
       run: |
+        cd aosp10
         source build/envsetup.sh
         lunch aosp_arm-eng
-        m hidl-gen
+        m hidl-gen -j$(nproc)
 
-    - name: Upload hidl-gen binary
+    - name: Upload hidl-gen
       uses: actions/upload-artifact@v4
       with:
         name: hidl-gen
-        path: aosp10/out/host/linux-x86/bin/hidl-gen
+        path: out/host/linux-x86/bin/hidl-gen
