@@ -37,14 +37,14 @@ jobs:
           export PATH=~/bin:$PATH
           cd aosp10
           repo sync -c -j$(nproc) \
-         build/soong \
-         system/core \
-         system/tools/hidl \
-         prebuilts/clang \
-         prebuilts/gcc \
-         prebuilts/go \
-         external/libcxx \
-         external/gtest
+            build/soong \
+            system/core \
+            system/tools/hidl \
+            prebuilts/clang \
+            prebuilts/gcc \
+            prebuilts/go \
+            external/libcxx \
+            external/gtest
 
       - name: Build hidl-gen
         run: |
