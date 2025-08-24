@@ -1,4 +1,4 @@
-name: Build hidl-gen (Partial Sync — Fixed)
+name: Build hidl-gen (Android 10 r47, Partial Sync)
 
 on:
   workflow_dispatch:
@@ -25,12 +25,12 @@ jobs:
         chmod a+x ~/bin/repo
         echo "$HOME/bin" >> $GITHUB_PATH
 
-    - name: Init AOSP manifest
+    - name: Init AOSP manifest (android-10.0.0_r47)
       run: |
         mkdir aosp10 && cd aosp10
         repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-    - name: Partial repo sync (correct paths)
+    - name: Partial repo sync (only needed projects)
       run: |
         cd aosp10
         repo sync -c -j$(nproc) \
@@ -38,11 +38,10 @@ jobs:
           build/blueprint \
           build/kati \
           build/soong \
-          system/tools/hidl \
+          system/core \
           system/libhidl \
           system/libfmq \
-          system/libbase \
-          system/core
+          system/tools/hidl
 
     - name: Setup build environment
       run: |
