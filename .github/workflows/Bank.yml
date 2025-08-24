@@ -37,21 +37,19 @@ jobs:
           export PATH=~/bin:$PATH
           cd aosp10
           repo sync -c -j$(nproc) \
-            build/soong \
-            system/core/base \
-            system/core/liblog \
-            system/tools/hidl \
-            prebuilts/clang \
-            prebuilts/gcc \
-            prebuilts/go \
-            external/libcxx \
-            external/gtest
+         build/soong \
+         system/core \
+         system/tools/hidl \
+         prebuilts/clang \
+         prebuilts/gcc \
+         prebuilts/go \
+         external/libcxx \
+         external/gtest
 
       - name: Build hidl-gen
         run: |
           export PATH=~/bin:$PATH
           cd aosp10
-          repo sync -c -j$(nproc) --no-clone-bundle --no-tags
           source build/envsetup.sh
           lunch aosp_arm-eng
           ALLOW_MISSING_DEPENDENCIES=true m hidl-gen
