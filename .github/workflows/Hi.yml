@@ -1,0 +1,5 @@
+- name: Debug check
+        run: |
+          echo "✅ Workflow started"
+          uname -a
+          df -h
