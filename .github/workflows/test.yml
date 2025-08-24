@@ -1,16 +1,27 @@
 name: Build hidl-gen
 
 on:
-  workflow_dispatch:   # chạy thủ công
+  workflow_dispatch:   # Bấm chạy thủ công
+  push:                # Hoặc khi push code
+    branches:
+      - main
 
 jobs:
   build:
-    runs-on: ubuntu-latest
-    timeout-minutes: 120   # tránh treo quá lâu
+    runs-on: ubuntu-20.04   # AOSP 10 ổn nhất với 20.04
+    timeout-minutes: 60     # Tránh treo quá lâu
 
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+
+      - name: Install deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-core gnupg flex bison build-essential zip curl \
+            zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 lib32ncurses5-dev \
+            x11proto-core-dev libx11-dev lib32z1-dev libgl1-mesa-dev libxml2-utils \
+            xsltproc unzip fontconfig
 
       - name: Setup repo tool
         run: |
@@ -19,32 +30,32 @@ jobs:
           chmod a+x ~/bin/repo
           echo "$HOME/bin" >> $GITHUB_PATH
 
-      - name: Init AOSP 10
+      - name: Init AOSP 10 manifest
         run: |
           mkdir aosp10 && cd aosp10
           repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-      - name: Sync minimal source for hidl-gen
+      - name: Repo sync only needed projects
+        working-directory: aosp10
         run: |
-          cd aosp10
-          # chỉ sync phần cần thiết để build hidl-gen
-          repo sync -c -j4 system/tools/hidl system/libhidl build/soong external/libcxx system/core external/googletest prebuilts/clang
-
-      - name: Keep-alive log
-        run: |
-          while true; do
-            echo "⏳ build vẫn đang chạy..."
-            sleep 60
-          done &
-          echo "keep-alive job running"
+          repo sync -c -j4 \
+            build/soong \
+            system/tools/hidl \
+            system/libhidl \
+            system/core/base \
+            external/libcxx \
+            external/googletest \
+            prebuilts/clang/host/linux-x86
 
       - name: Build hidl-gen
+        working-directory: aosp10
         run: |
-          cd aosp10
           source build/envsetup.sh
           lunch aosp_arm-eng
-          m hidl-gen -j$(nproc)
+          m hidl-gen
 
-      - name: Check hidl-gen
-        run: |
-          file aosp10/out/host/linux-x86/bin/hidl-gen || true
+      - name: Upload hidl-gen binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: hidl-gen
+          path: aosp10/out/host/linux-x86/bin/hidl-gen
