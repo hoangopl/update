@@ -1,0 +1,62 @@
+name: Build hidl-gen
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y git-core gnupg flex bison build-essential \
+            zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
+            lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
+            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
+
+      - name: Download repo tool
+        run: |
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+
+      - name: Init AOSP 10 repo
+        run: |
+          export PATH=~/bin:$PATH
+          mkdir -p aosp10 && cd aosp10
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
+
+      - name: Sync required projects
+        run: |
+          export PATH=~/bin:$PATH
+          cd aosp10
+          repo sync -c -j$(nproc) \
+            build/soong \
+            system/core/base \
+            system/core/liblog \
+            system/tools/hidl \
+            prebuilts/clang \
+            prebuilts/gcc \
+            prebuilts/go \
+            external/libcxx \
+            external/gtest
+
+      - name: Build hidl-gen
+        run: |
+          export PATH=~/bin:$PATH
+          cd aosp10
+          source build/envsetup.sh
+          lunch aosp_arm-eng
+          ALLOW_MISSING_DEPENDENCIES=true m hidl-gen
+
+      - name: Upload hidl-gen binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: hidl-gen
+          path: aosp10/out/host/linux-x86/bin/hidl-gen
