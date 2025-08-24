@@ -1,4 +1,4 @@
-name: Build hidl-gen (Partial Sync)
+name: Build hidl-gen (Partial Sync — Fixed)
 
 on:
   workflow_dispatch:
@@ -11,7 +11,7 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v4
 
-    - name: Cài dependencies
+    - name: Install dependencies
       run: |
         sudo apt-get update
         sudo apt-get install -y git-core gnupg flex bison build-essential zip curl zlib1g-dev \
@@ -25,24 +25,26 @@ jobs:
         chmod a+x ~/bin/repo
         echo "$HOME/bin" >> $GITHUB_PATH
 
-    - name: Init AOSP (android-10.0.0_r47)
+    - name: Init AOSP manifest
       run: |
         mkdir aosp10 && cd aosp10
         repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-    - name: Partial repo sync (chỉ các project cần thiết)
+    - name: Partial repo sync (correct paths)
       run: |
         cd aosp10
         repo sync -c -j$(nproc) \
           build/make \
+          build/blueprint \
+          build/kati \
           build/soong \
-          system/core \
-          system/libbase \
+          system/tools/hidl \
           system/libhidl \
           system/libfmq \
-          system/tools/hidl
+          system/libbase \
+          system/core
 
-    - name: Thiết lập môi trường build
+    - name: Setup build environment
       run: |
         cd aosp10
         source build/envsetup.sh
