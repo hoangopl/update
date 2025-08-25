@@ -37,6 +37,7 @@ jobs:
           export PATH=~/bin:$PATH
           cd aosp10
           repo sync -c -j$(nproc) \
+            build/make \
             build/soong \
             build/blueprint \
             system/core \
