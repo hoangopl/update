@@ -5,43 +5,59 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
-
+    runs-on: ubuntu-22.04
     steps:
-      - name: Checkout repo manifest
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
         run: |
-          mkdir aosp10
-          cd aosp10
-          git clone https://android.googlesource.com/platform/manifest .repo/manifests
+          sudo apt-get update
+          sudo apt-get install -y git-core gnupg flex bison build-essential \
+            zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
+            lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
+            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig golang
+
+      - name: Download repo tool
+        run: |
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
+
+      - name: Init AOSP 10 repo
+        run: |
+          export PATH=~/bin:$PATH
+          mkdir -p aosp10 && cd aosp10
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
           repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-      - name: Download required AOSP repos
+      - name: Sync required projects
         run: |
+          export PATH=~/bin:$PATH
           cd aosp10
           repo sync -c -j$(nproc) \
-            build/make \
             build/soong \
             build/blueprint \
             system/core \
-            system/libhidl \
             system/tools/hidl \
+            system/libhidl \
             external/libcxx \
-            external/gtest \
-            prebuilts/clang/host/linux-x86 \
-            prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8 \
-            prebuilts/go/linux-x86
+            external/libchrome \
+            external/expat
 
-      - name: Setup environment
+      - name: Patch microfactory to use system Go
         run: |
           cd aosp10
-          export PATH=~/bin:$PATH
-          source build/envsetup.sh
+          sed -i 's|"$TOP/prebuilts/go/linux-x86/[^/]*/bin/go"|go|' build/blueprint/microfactory/microfactory.bash
 
       - name: Build hidl-gen
         run: |
+          export PATH=~/bin:$PATH
           cd aosp10
           source build/envsetup.sh
-          m hidl-gen -j$(nproc)
+          lunch aosp_arm-eng
+          ALLOW_MISSING_DEPENDENCIES=true m hidl-gen
 
       - name: Upload hidl-gen binary
         uses: actions/upload-artifact@v4
