@@ -17,7 +17,12 @@ jobs:
           sudo apt-get install -y git-core gnupg flex bison build-essential \
             zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
             lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
-            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig golang
+            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
+
+      - name: Setup Go 1.12.17 (required for AOSP 10 soong)
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.12.17'
 
       - name: Download repo tool
         run: |
@@ -57,6 +62,17 @@ jobs:
         run: |
           cd aosp10
           git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 prebuilts/vndk/v28
+
+      - name: Force Go 1.12.17 into prebuilts/go
+        run: |
+          cd aosp10
+          rm -rf prebuilts/go
+          mkdir -p prebuilts/go/linux-x86
+          GOROOT=$(go env GOROOT)
+          echo "Using Go from $GOROOT"
+          cp -a $GOROOT/* prebuilts/go/linux-x86/
+          ls -l prebuilts/go/linux-x86/bin/go
+          prebuilts/go/linux-x86/bin/go version
 
       - name: Build hidl-gen only (skip lunch)
         run: |
