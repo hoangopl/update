@@ -17,7 +17,12 @@ jobs:
           sudo apt-get install -y git-core gnupg flex bison build-essential \
             zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
             lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
-            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig golang
+            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
+
+      - name: Setup Go 1.13 (required for AOSP 10 soong)
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.13'
 
       - name: Download repo tool
         run: |
@@ -58,13 +63,13 @@ jobs:
           cd aosp10
           git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 prebuilts/vndk/v28
 
-      - name: Force system Go instead of prebuilts/go
+      - name: Force Go 1.13 into prebuilts/go
         run: |
           cd aosp10
           rm -rf prebuilts/go
           mkdir -p prebuilts/go
           GOROOT=$(go env GOROOT)
-          echo "System GOROOT = $GOROOT"
+          echo "Using Go from $GOROOT"
           ln -s $GOROOT prebuilts/go/linux-x86
           go version
 
