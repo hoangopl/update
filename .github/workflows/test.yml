@@ -1,11 +1,11 @@
-name: Build hidl-gen (minimal fixed)
+name: Build hidl-gen
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04   # 20.04 an toàn hơn cho AOSP 10
+    runs-on: ubuntu-22.04
 
     steps:
       - name: Checkout
@@ -17,51 +17,56 @@ jobs:
           sudo apt-get install -y git-core gnupg flex bison build-essential \
             zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
             lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
-            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig ccache
+            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
 
-      - name: Setup Go 1.13
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.13'
-
-      - name: Clone minimal AOSP repos
+      - name: Download repo tool
         run: |
-          mkdir -p aosp10 && cd aosp10
-          git clone https://android.googlesource.com/platform/build/blueprint build/blueprint
-          git clone https://android.googlesource.com/platform/build/soong build/soong
-          git clone https://android.googlesource.com/platform/system/tools/hidl system/tools/hidl
-          git clone https://android.googlesource.com/platform/system/libhidl system/libhidl
-          git clone https://android.googlesource.com/platform/system/core system/core
-          git clone https://android.googlesource.com/platform/external/libcxx external/libcxx
-          git clone https://android.googlesource.com/platform/external/libchrome external/libchrome
-          git clone https://android.googlesource.com/platform/external/expat external/expat
-          git clone https://android.googlesource.com/platform/external/googletest external/googletest
-          git clone https://android.googlesource.com/platform/external/golang-protobuf external/golang-protobuf
-          git clone https://android.googlesource.com/platform/external/protobuf external/protobuf
-          git clone https://android.googlesource.com/platform/external/selinux external/selinux
-          git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 prebuilts/vndk/v28
-          # cần clang host prebuilts cho soong bootstrap
-          git clone https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86 prebuilts/clang/host/linux-x86
+          mkdir -p ~/bin
+          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+          chmod a+x ~/bin/repo
 
-      - name: Force Go 1.13 into prebuilts/go
+      - name: Init AOSP 10 repo (minimal)
+        run: |
+          export PATH=~/bin:$PATH
+          mkdir -p aosp10 && cd aosp10
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
+
+      - name: Sync required projects (minimal, clean)
+        run: |
+          export PATH=~/bin:$PATH
+          cd aosp10
+          repo sync -c -j$(nproc) \
+            build/make \
+            build/soong \
+            build/blueprint \
+            prebuilts/build-tools \
+            prebuilts/misc \
+            prebuilts/go \
+            system/core \
+            system/tools/hidl \
+            system/libhidl \
+            external/libcxx \
+            external/libchrome \
+            external/expat \
+            external/golang-protobuf \
+            external/protobuf \
+            external/googletest
+
+      - name: Fetch VNDK v28 (fix missing prebuilts)
         run: |
           cd aosp10
-          rm -rf prebuilts/go
-          mkdir -p prebuilts/go
-          GOROOT=$(go env GOROOT)
-          echo "Using Go from $GOROOT"
-          ln -s $GOROOT prebuilts/go/linux-x86
-          go version
+          git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 prebuilts/vndk/v28
 
-      - name: Build hidl-gen only
+      - name: Build hidl-gen only (skip lunch)
         run: |
+          export PATH=~/bin:$PATH
           cd aosp10
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           export WITHOUT_CHECK_API=true
-          export NINJA_ARGS="-v"
-          # ép flush stdout/stderr để thấy log ngay
-          stdbuf -oL -eL build/soong/soong_ui.bash --make-mode -j$(nproc) hidl-gen V=1
+          build/soong/soong_ui.bash --make-mode hidl-gen
 
       - name: Upload hidl-gen binary
         uses: actions/upload-artifact@v4
