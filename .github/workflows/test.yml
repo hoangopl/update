@@ -43,7 +43,7 @@ jobs:
             system/libhidl \
             system/core \
             external/libcxx \
-            external/gtest \
+            external/googletest \
             prebuilts/clang/host/linux-x86 \
             prebuilts/gcc \
             prebuilts/misc \
