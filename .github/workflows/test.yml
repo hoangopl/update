@@ -69,6 +69,11 @@ jobs:
           cd aosp10
           source build/envsetup.sh
           lunch aosp_arm-eng
+
+          # Fake VNDK 28 để tránh lỗi
+          mkdir -p prebuilts/vndk/v28
+          touch prebuilts/vndk/v28/Android.mk
+
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           m hidl-gen
