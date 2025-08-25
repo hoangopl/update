@@ -53,6 +53,11 @@ jobs:
             external/protobuf \
             external/googletest
 
+      - name: Fetch VNDK v28 (fix missing prebuilts)
+        run: |
+          cd aosp10
+          git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 prebuilts/vndk/v28
+
       - name: Force system Go instead of prebuilts/go
         run: |
           cd aosp10
@@ -70,7 +75,6 @@ jobs:
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           export WITHOUT_CHECK_API=true
-          export DISABLE_PREBUILTS_VNDK=true
           build/soong/soong_ui.bash --make-mode hidl-gen
 
       - name: Upload hidl-gen binary
