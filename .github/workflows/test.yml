@@ -1,11 +1,11 @@
-name: Build hidl-gen
+name: Build hidl-gen (minimal)
 
 on:
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04   # dùng 20.04 để tránh toolchain quá mới
+    runs-on: ubuntu-20.04   # nên dùng 20.04 cho AOSP 10
 
     steps:
       - name: Checkout
@@ -24,43 +24,20 @@ jobs:
         with:
           go-version: '1.13'
 
-      - name: Download repo tool
+      - name: Clone minimal AOSP repos
         run: |
-          mkdir -p ~/bin
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-          chmod a+x ~/bin/repo
-
-      - name: Init AOSP 10 repo (minimal)
-        run: |
-          export PATH=~/bin:$PATH
           mkdir -p aosp10 && cd aosp10
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
-
-      - name: Sync required projects (minimal, clean)
-        run: |
-          export PATH=~/bin:$PATH
-          cd aosp10
-          repo sync -c -j$(nproc) \
-            build/make \
-            build/soong \
-            build/blueprint \
-            prebuilts/build-tools \
-            prebuilts/misc \
-            system/core \
-            system/tools/hidl \
-            system/libhidl \
-            external/libcxx \
-            external/libchrome \
-            external/expat \
-            external/golang-protobuf \
-            external/protobuf \
-            external/googletest
-
-      - name: Fetch VNDK v28 (fix missing prebuilts)
-        run: |
-          cd aosp10
+          git clone https://android.googlesource.com/platform/build/blueprint build/blueprint
+          git clone https://android.googlesource.com/platform/build/soong build/soong
+          git clone https://android.googlesource.com/platform/system/tools/hidl system/tools/hidl
+          git clone https://android.googlesource.com/platform/system/libhidl system/libhidl
+          git clone https://android.googlesource.com/platform/system/core system/core
+          git clone https://android.googlesource.com/platform/external/libcxx external/libcxx
+          git clone https://android.googlesource.com/platform/external/libchrome external/libchrome
+          git clone https://android.googlesource.com/platform/external/expat external/expat
+          git clone https://android.googlesource.com/platform/external/googletest external/googletest
+          git clone https://android.googlesource.com/platform/external/golang-protobuf external/golang-protobuf
+          git clone https://android.googlesource.com/platform/external/protobuf external/protobuf
           git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 prebuilts/vndk/v28
 
       - name: Force Go 1.13 into prebuilts/go
@@ -73,9 +50,8 @@ jobs:
           ln -s $GOROOT prebuilts/go/linux-x86
           go version
 
-      - name: Build hidl-gen only (skip lunch)
+      - name: Build hidl-gen only
         run: |
-          export PATH=~/bin:$PATH
           cd aosp10
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
