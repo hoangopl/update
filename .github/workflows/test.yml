@@ -16,8 +16,7 @@ jobs:
           sudo apt-get install -y git-core gnupg flex bison build-essential \
             zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
             lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
-            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig \
-            golang-go
+            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig golang
 
       - name: Download repo tool
         run: |
@@ -40,26 +39,33 @@ jobs:
           repo sync -c -j$(nproc) \
             build/soong \
             build/blueprint \
-            build/make \
-            system/core \
+            system/core/liblog \
             system/libhidl \
             system/tools/hidl \
-            external/libcxx \
-            external/googletest \
-            prebuilts/clang/host/linux-x86
+            external/libcxx
 
       - name: Patch microfactory to use system Go
         run: |
           cd aosp10
-          sed -i 's|GO=.*|GO=$(command -v go)|' build/blueprint/microfactory/microfactory.bash
-          sed -i 's|cd .*prebuilts/go/linux-x86.*||' build/blueprint/microfactory/microfactory.bash
+          # Blueprint microfactory
+          sed -i 's|.*/prebuilts/go/linux-x86.*/bin/go|go|g' build/blueprint/microfactory/microfactory.bash || true
+          sed -i 's|cd .*prebuilts/go/linux-x86.*||g' build/blueprint/microfactory/microfactory.bash || true
+
+          # Soong microfactory
+          sed -i 's|.*/prebuilts/go/linux-x86.*/bin/go|go|g' build/soong/scripts/microfactory.bash || true
+          sed -i 's|cd .*prebuilts/go/linux-x86.*||g' build/soong/scripts/microfactory.bash || true
+
+          echo ">>> Blueprint script:"
+          grep -n "go" build/blueprint/microfactory/microfactory.bash || true
+          echo ">>> Soong script:"
+          grep -n "go" build/soong/scripts/microfactory.bash || true
 
       - name: Build hidl-gen
         run: |
           export PATH=~/bin:$PATH
           cd aosp10
-          source build/envsetup.sh
-          lunch aosp_arm-eng
+          source build/envsetup.sh || true
+          lunch aosp_arm-eng || true
           ALLOW_MISSING_DEPENDENCIES=true m hidl-gen
 
       - name: Upload hidl-gen binary
