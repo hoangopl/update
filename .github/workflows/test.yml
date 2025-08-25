@@ -39,6 +39,7 @@ jobs:
           repo sync -c -j$(nproc) \
             build/soong \
             build/blueprint \
+            build/make \
             system/core \
             system/tools/hidl \
             system/libhidl \
@@ -46,10 +47,10 @@ jobs:
             external/libchrome \
             external/expat
 
-      - name: Patch microfactory to use system Go
+      - name: Patch microfactory.bash to use system go
         run: |
-          cd aosp10
-          sed -i 's|"$TOP/prebuilts/go/linux-x86/[^/]*/bin/go"|go|' build/blueprint/microfactory/microfactory.bash
+          sed -i 's|prebuilts/go/linux-x86/[^/]*/bin/go|go|g' \
+            aosp10/build/blueprint/microfactory/microfactory.bash
 
       - name: Build hidl-gen
         run: |
