@@ -45,8 +45,15 @@ jobs:
             system/libhidl \
             external/libcxx \
             external/libchrome \
-            external/expat \
-            prebuilts/go
+            external/expat
+
+      - name: Patch build system to use system Go
+        run: |
+          cd aosp10
+          # Patch microfactory
+          sed -i 's|\$TOP/prebuilts/go/linux-x86/[^/]*/bin/go|go|g' build/blueprint/microfactory/microfactory.bash
+          # Patch soong bootstrap
+          sed -i 's|\$TOP/prebuilts/go/linux-x86/[^/]*/bin/go|go|g' build/soong/bootstrap.bash
 
       - name: Build hidl-gen
         run: |
