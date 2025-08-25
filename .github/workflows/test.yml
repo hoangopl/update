@@ -54,6 +54,7 @@ jobs:
             prebuilts/misc \
             prebuilts/sdk \
             prebuilts/clang/host/linux-x86 \
+            prebuilts/gcc \
             system/core \
             system/tools/hidl \
             system/libhidl \
