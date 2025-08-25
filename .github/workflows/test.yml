@@ -46,7 +46,10 @@ jobs:
             system/libhidl \
             external/libcxx \
             external/libchrome \
-            external/expat
+            external/expat \
+            external/golang-protobuf \
+            external/protobuf \
+            external/googletest
 
       - name: Force system Go instead of prebuilts/go
         run: |
