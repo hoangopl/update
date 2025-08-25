@@ -49,6 +49,7 @@ jobs:
             prebuilts/build-tools \
             prebuilts/misc \
             prebuilts/sdk \
+            prebuilts/clang \
             system/core \
             system/tools/hidl \
             system/libhidl \
