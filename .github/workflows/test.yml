@@ -25,7 +25,7 @@ jobs:
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
           chmod a+x ~/bin/repo
 
-      - name: Init AOSP 10 repo
+      - name: Init AOSP 10 repo (minimal)
         run: |
           export PATH=~/bin:$PATH
           mkdir -p aosp10 && cd aosp10
@@ -33,7 +33,7 @@ jobs:
           git config --global user.email "actions@github.com"
           repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-      - name: Sync required projects
+      - name: Sync only needed projects
         run: |
           export PATH=~/bin:$PATH
           cd aosp10
@@ -58,25 +58,20 @@ jobs:
           cd aosp10
           rm -rf prebuilts/go
           mkdir -p prebuilts/go
-
-          # Lấy GOROOT thực tế của Go hệ thống
           GOROOT=$(go env GOROOT)
           echo "System GOROOT = $GOROOT"
-
-          # Symlink toàn bộ GOROOT system vào prebuilts/go/linux-x86
           ln -s $GOROOT prebuilts/go/linux-x86
-
-          # Kiểm tra
-          ls -l prebuilts/go/linux-x86
           go version
 
-      - name: Build hidl-gen
+      - name: Build hidl-gen only
         run: |
           export PATH=~/bin:$PATH
           cd aosp10
           source build/envsetup.sh
           lunch aosp_arm-eng
-          ALLOW_MISSING_DEPENDENCIES=true m hidl-gen
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export SOONG_ALLOW_MISSING_DEPENDENCIES=true
+          m hidl-gen
 
       - name: Upload hidl-gen binary
         uses: actions/upload-artifact@v4
