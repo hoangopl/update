@@ -6,6 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-22.04
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -47,25 +48,13 @@ jobs:
             external/libchrome \
             external/expat
 
-      - name: Patch build system to use system Go
+      - name: Force system Go instead of prebuilts/go
         run: |
           cd aosp10
-          echo "Force using system Go..."
-
-          # Patch microfactory
-          sed -i '1i GO_EXEC=go' build/blueprint/microfactory/microfactory.bash
-          sed -i '/prebuilts\/go/d' build/blueprint/microfactory/microfactory.bash
-
-          # Patch soong bootstrap
-          sed -i '1i GO_EXEC=go' build/soong/bootstrap.bash
-          sed -i '/prebuilts\/go/d' build/soong/bootstrap.bash
-
-          echo "===== microfactory head ====="
-          head -n 20 build/blueprint/microfactory/microfactory.bash
-          echo "===== bootstrap head ====="
-          head -n 20 build/soong/bootstrap.bash
-
-          which go
+          rm -rf prebuilts/go
+          mkdir -p prebuilts/go/linux-x86/bin
+          ln -s $(which go) prebuilts/go/linux-x86/bin/go
+          echo "Using Go from: $(which go)"
           go version
 
       - name: Build hidl-gen
