@@ -54,7 +54,7 @@ jobs:
             prebuilts/misc \
             prebuilts/sdk \
             prebuilts/clang/host/linux-x86 \
-            prebuilts/gcc \
+            prebuilts/gcc/... \
             system/core \
             system/tools/hidl \
             system/libhidl \
@@ -65,10 +65,10 @@ jobs:
             external/protobuf \
             external/googletest
 
-      - name: Fetch VNDK v28 (Android 10 branch)
+      - name: Fetch VNDK v28
         run: |
           cd aosp10
-          git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 -b android-10.0.0_r47 prebuilts/vndk/v28
+          git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 prebuilts/vndk/v28
 
       - name: Force Go 1.12.17 into prebuilts/go
         run: |
@@ -78,18 +78,13 @@ jobs:
           ln -s $GOROOT prebuilts/go/linux-x86
           go version
 
-      - name: Patch missing headers (Ubuntu 22.04 sysroot fix)
-        run: |
-          cd aosp10/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.17-4.8/sysroot/usr/include
-          sudo cp -r /usr/include/* .
-
       - name: Build hidl-gen
         run: |
           cd aosp10
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           export WITHOUT_CHECK_API=true
-          build/soong/soong_ui.bash --make-mode -j$(nproc) hidl-gen
+          build/soong/soong_ui.bash --make-mode hidl-gen
 
       - name: Upload hidl-gen binary
         uses: actions/upload-artifact@v4
