@@ -48,6 +48,7 @@ jobs:
             build/blueprint \
             prebuilts/build-tools \
             prebuilts/misc \
+            prebuilts/sdk \
             system/core \
             system/tools/hidl \
             system/libhidl \
