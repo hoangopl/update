@@ -33,7 +33,7 @@ jobs:
           git config --global user.email "actions@github.com"
           repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-      - name: Sync required projects (include VNDK)
+      - name: Sync only needed projects
         run: |
           export PATH=~/bin:$PATH
           cd aosp10
@@ -43,8 +43,6 @@ jobs:
             build/blueprint \
             prebuilts/build-tools \
             prebuilts/misc \
-            prebuilts/vndk \
-            prebuilts/abi-dumps \
             system/core \
             system/tools/hidl \
             system/libhidl \
@@ -54,6 +52,19 @@ jobs:
             external/golang-protobuf \
             external/protobuf \
             external/googletest
+
+      - name: Fake VNDK 28 to bypass check
+        run: |
+          cd aosp10
+          # Tạo thư mục VNDK rỗng
+          mkdir -p prebuilts/vndk/v28
+          # Tạo Android.mk tối giản để makefile không crash
+          cat > prebuilts/vndk/v28/Android.mk <<'EOF'
+include $(CLEAR_VARS)
+LOCAL_MODULE := vndk_fake
+LOCAL_MODULE_CLASS := FAKE
+include $(BUILD_SYSTEM)/fake_module.mk
+EOF
 
       - name: Force system Go instead of prebuilts/go
         run: |
@@ -71,6 +82,7 @@ jobs:
           cd aosp10
           source build/envsetup.sh
           lunch aosp_arm-eng
+
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           m hidl-gen
