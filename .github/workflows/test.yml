@@ -45,7 +45,6 @@ jobs:
             external/libcxx \
             external/googletest \
             prebuilts/clang/host/linux-x86 \
-            prebuilts/gcc \
             prebuilts/misc \
             prebuilts/sdk
 
