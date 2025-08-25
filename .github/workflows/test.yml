@@ -19,10 +19,10 @@ jobs:
             lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
             libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
 
-      - name: Setup Go 1.12.17 (required for AOSP 10 soong)
+      - name: Setup Go 1.13 (required for AOSP 10 soong)
         uses: actions/setup-go@v5
         with:
-          go-version: '1.12.17'
+          go-version: '1.13'
 
       - name: Download repo tool
         run: |
@@ -64,19 +64,16 @@ jobs:
         run: |
           cd aosp10
           git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 prebuilts/vndk/v28
-          cd prebuilts/vndk/v28
-          git checkout android-10.0.0_r47
 
-      - name: Force Go 1.12.17 into prebuilts/go
+      - name: Force Go 1.13 into prebuilts/go
         run: |
           cd aosp10
           rm -rf prebuilts/go
-          mkdir -p prebuilts/go/linux-x86
+          mkdir -p prebuilts/go
           GOROOT=$(go env GOROOT)
           echo "Using Go from $GOROOT"
-          cp -a $GOROOT/* prebuilts/go/linux-x86/
-          ls -l prebuilts/go/linux-x86/bin/go
-          prebuilts/go/linux-x86/bin/go version
+          ln -s $GOROOT prebuilts/go/linux-x86
+          go version
 
       - name: Build hidl-gen only (skip lunch)
         run: |
@@ -87,4 +84,8 @@ jobs:
           export WITHOUT_CHECK_API=true
           build/soong/soong_ui.bash --make-mode hidl-gen
 
-      -
+      - name: Upload hidl-gen binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: hidl-gen
+          path: aosp10/out/host/linux-x86/bin/hidl-gen
