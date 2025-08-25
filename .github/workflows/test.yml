@@ -39,6 +39,7 @@ jobs:
           repo sync -c -j$(nproc) --no-tags --no-clone-bundle \
             build/soong \
             build/make \
+            build/blueprint \
             system/tools/hidl \
             system/libhidl \
             system/core \
