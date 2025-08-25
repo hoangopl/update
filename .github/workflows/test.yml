@@ -50,12 +50,20 @@ jobs:
       - name: Patch build system to use system Go
         run: |
           cd aosp10
-          echo "Patching to use system Go..."
-          # ép GO_EXEC = go system
-          sed -i 's|GO_EXEC=.*|GO_EXEC=go|' build/blueprint/microfactory/microfactory.bash
+          echo "Force using system Go..."
+
+          # Patch microfactory
+          sed -i '1i GO_EXEC=go' build/blueprint/microfactory/microfactory.bash
           sed -i '/prebuilts\/go/d' build/blueprint/microfactory/microfactory.bash
-          sed -i 's|\$TOP/prebuilts/go/linux-x86/[^/]*/bin/go|go|g' build/soong/bootstrap.bash
+
+          # Patch soong bootstrap
+          sed -i '1i GO_EXEC=go' build/soong/bootstrap.bash
           sed -i '/prebuilts\/go/d' build/soong/bootstrap.bash
+
+          echo "===== microfactory head ====="
+          head -n 20 build/blueprint/microfactory/microfactory.bash
+          echo "===== bootstrap head ====="
+          head -n 20 build/soong/bootstrap.bash
 
           which go
           go version
