@@ -46,11 +46,10 @@ jobs:
             external/libchrome \
             external/expat
 
-      - name: Fake prebuilts/go
+      - name: Patch microfactory to use system Go
         run: |
           cd aosp10
-          mkdir -p prebuilts/go/linux-x86/bin
-          ln -sf /usr/bin/go prebuilts/go/linux-x86/bin/go
+          sed -i 's|"$TOP/prebuilts/go/linux-x86/[^/]*/bin/go"|go|' build/blueprint/microfactory/microfactory.bash
 
       - name: Build hidl-gen
         run: |
