@@ -41,7 +41,6 @@ jobs:
             build/make \
             system/tools/hidl \
             system/libhidl \
-            system/libhidl/transport \
             system/core \
             external/libcxx \
             external/gtest \
