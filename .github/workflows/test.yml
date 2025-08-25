@@ -56,9 +56,7 @@ jobs:
       - name: Fake VNDK 28 to bypass check
         run: |
           cd aosp10
-          # Tạo thư mục VNDK rỗng
           mkdir -p prebuilts/vndk/v28
-          # Tạo Android.mk tối giản để makefile không crash
           cat > prebuilts/vndk/v28/Android.mk <<'EOF'
 include $(CLEAR_VARS)
 LOCAL_MODULE := vndk_fake
@@ -82,7 +80,6 @@ EOF
           cd aosp10
           source build/envsetup.sh
           lunch aosp_arm-eng
-
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           m hidl-gen
