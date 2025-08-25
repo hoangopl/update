@@ -1,12 +1,23 @@
-- name: Install hidl-gen (from Debian package)
+name: Build hidl-gen
+
+'on':
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install hidl-gen (Debian package)
         run: |
           sudo apt-get update
           sudo apt-get install -y android-platform-system-tools-hidl
-          mkdir -p aosp10/out/host/linux-x86/bin
-          cp $(which hidl-gen) aosp10/out/host/linux-x86/bin/hidl-gen
+          mkdir -p out/host/linux-x86/bin
+          cp "$(which hidl-gen)" out/host/linux-x86/bin/hidl-gen
 
       - name: Upload hidl-gen binary
         uses: actions/upload-artifact@v4
         with:
           name: hidl-gen
-          path: aosp10/out/host/linux-x86/bin/hidl-gen
+          path: out/host/linux-x86/bin/hidl-gen
