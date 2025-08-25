@@ -52,9 +52,17 @@ jobs:
         run: |
           cd aosp10
           rm -rf prebuilts/go
-          mkdir -p prebuilts/go/linux-x86/bin
-          ln -s $(which go) prebuilts/go/linux-x86/bin/go
-          echo "Using Go from: $(which go)"
+          mkdir -p prebuilts/go
+
+          # Lấy GOROOT thực tế của Go hệ thống
+          GOROOT=$(go env GOROOT)
+          echo "System GOROOT = $GOROOT"
+
+          # Symlink toàn bộ GOROOT system vào prebuilts/go/linux-x86
+          ln -s $GOROOT prebuilts/go/linux-x86
+
+          # Kiểm tra
+          ls -l prebuilts/go/linux-x86
           go version
 
       - name: Build hidl-gen
