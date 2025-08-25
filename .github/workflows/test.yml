@@ -37,21 +37,7 @@ jobs:
         run: |
           export PATH=~/bin:$PATH
           cd aosp10
-          repo sync -c -j$(nproc) \
-            build/make \
-            build/soong \
-            build/blueprint \
-            prebuilts/build-tools \
-            prebuilts/misc \
-            system/core \
-            system/tools/hidl \
-            system/libhidl \
-            external/libcxx \
-            external/libchrome \
-            external/expat \
-            external/golang-protobuf \
-            external/protobuf \
-            external/googletest
+          repo sync -c -j$(nproc) build/make build/soong build/blueprint prebuilts/build-tools prebuilts/misc system/core system/tools/hidl system/libhidl external/libcxx external/libchrome external/expat external/golang-protobuf external/protobuf external/googletest
 
       - name: Fake VNDK 28 to bypass check
         run: |
