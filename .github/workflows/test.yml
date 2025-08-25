@@ -16,8 +16,7 @@ jobs:
           sudo apt-get install -y git-core gnupg flex bison build-essential \
             zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
             lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
-            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig \
-            golang
+            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig golang
 
       - name: Download repo tool
         run: |
@@ -25,7 +24,7 @@ jobs:
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
           chmod a+x ~/bin/repo
 
-      - name: Init AOSP 10 manifest
+      - name: Init AOSP 10 repo
         run: |
           export PATH=~/bin:$PATH
           mkdir -p aosp10 && cd aosp10
@@ -33,22 +32,25 @@ jobs:
           git config --global user.email "actions@github.com"
           repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-      - name: Sync only required projects
+      - name: Sync required projects
         run: |
           export PATH=~/bin:$PATH
           cd aosp10
-          repo sync -c -j$(nproc) --no-tags --no-clone-bundle \
+          repo sync -c -j$(nproc) \
             build/soong \
-            build/make \
             build/blueprint \
+            system/core \
             system/tools/hidl \
             system/libhidl \
-            system/core \
             external/libcxx \
-            external/googletest \
-            prebuilts/clang/host/linux-x86 \
-            prebuilts/misc \
-            prebuilts/sdk
+            external/libchrome \
+            external/expat
+
+      - name: Fake prebuilts/go
+        run: |
+          cd aosp10
+          mkdir -p prebuilts/go/linux-x86/bin
+          ln -sf /usr/bin/go prebuilts/go/linux-x86/bin/go
 
       - name: Build hidl-gen
         run: |
