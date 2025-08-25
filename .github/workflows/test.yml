@@ -49,7 +49,7 @@ jobs:
             prebuilts/build-tools \
             prebuilts/misc \
             prebuilts/sdk \
-            prebuilts/clang \
+            prebuilts/clang/host/linux-x86 \
             system/core \
             system/tools/hidl \
             system/libhidl \
@@ -87,8 +87,4 @@ jobs:
           export WITHOUT_CHECK_API=true
           build/soong/soong_ui.bash --make-mode hidl-gen
 
-      - name: Upload hidl-gen binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: hidl-gen
-          path: aosp10/out/host/linux-x86/bin/hidl-gen
+      -
