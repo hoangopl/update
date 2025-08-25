@@ -63,16 +63,15 @@ jobs:
           ln -s $GOROOT prebuilts/go/linux-x86
           go version
 
-      - name: Build hidl-gen only (disable VNDK check)
+      - name: Build hidl-gen only (skip lunch)
         run: |
           export PATH=~/bin:$PATH
           cd aosp10
-          source build/envsetup.sh
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
           export WITHOUT_CHECK_API=true
           export DISABLE_PREBUILTS_VNDK=true
-          m hidl-gen
+          build/soong/soong_ui.bash --make-mode hidl-gen
 
       - name: Upload hidl-gen binary
         uses: actions/upload-artifact@v4
