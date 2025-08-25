@@ -1,59 +1,12 @@
-name: Build hidl-gen
-
-on:
-  workflow_dispatch:
-
-jobs:
-  build:
-    runs-on: ubuntu-22.04
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Install dependencies
+- name: Install hidl-gen (from Debian package)
         run: |
           sudo apt-get update
-          sudo apt-get install -y git-core gnupg flex bison build-essential \
-            zip curl zlib1g-dev gcc-multilib g++-multilib \
-            lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
-            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig openjdk-11-jdk
+          sudo apt-get install -y android-platform-system-tools-hidl
+          mkdir -p aosp10/out/host/linux-x86/bin
+          cp $(which hidl-gen) aosp10/out/host/linux-x86/bin/hidl-gen
 
-      - name: Setup repo tool
-        run: |
-          mkdir -p ~/bin
-          curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
-          chmod a+x ~/bin/repo
-          echo "PATH=~/bin:$PATH" >> $GITHUB_ENV
-
-      - name: Sync AOSP 10 source
-        run: |
-          mkdir aosp10
-          cd aosp10
-          repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
-          repo sync -c -j4
-
-      - name: Fix Go version (Go 1.12.17)
-        run: |
-          cd aosp10/prebuilts
-          rm -rf go
-          git clone https://android.googlesource.com/platform/prebuilts/go -b android-10.0.0_r47 go
-
-      - name: Fix prebuilts/vndk/v28 (for AOSP 10)
-        run: |
-          cd aosp10/prebuilts
-          rm -rf vndk/v28
-          git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 -b android-10.0.0_r47 vndk/v28
-
-      - name: Fix prebuilts/clang (for AOSP 10)
-        run: |
-          cd aosp10/prebuilts
-          rm -rf clang
-          git clone https://android.googlesource.com/platform/prebuilts/clang -b android-10.0.0_r47 clang
-
-      - name: Build hidl-gen
-        run: |
-          cd aosp10
-          . build/envsetup.sh
-          lunch aosp_x86_64-eng
-          m hidl-gen
+      - name: Upload hidl-gen binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: hidl-gen
+          path: aosp10/out/host/linux-x86/bin/hidl-gen
