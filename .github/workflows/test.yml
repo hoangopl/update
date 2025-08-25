@@ -19,28 +19,32 @@ jobs:
             lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
             libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
 
-      - name: Setup Go 1.13 (required for AOSP 10 soong)
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.13'
+      - name: Setup Go 1.12.17 (required for AOSP 10 soong)
+        run: |
+          wget https://dl.google.com/go/go1.12.17.linux-amd64.tar.gz
+          tar -C $HOME -xzf go1.12.17.linux-amd64.tar.gz
+          mkdir -p $HOME/bin
+          mv $HOME/go $HOME/bin/go1.12.17
+          echo "GOROOT=$HOME/bin/go1.12.17" >> $GITHUB_ENV
+          echo "$HOME/bin/go1.12.17/bin" >> $GITHUB_PATH
+          go version
 
       - name: Download repo tool
         run: |
           mkdir -p ~/bin
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
           chmod a+x ~/bin/repo
+          echo "$HOME/bin" >> $GITHUB_PATH
 
       - name: Init AOSP 10 repo (minimal)
         run: |
-          export PATH=~/bin:$PATH
           mkdir -p aosp10 && cd aosp10
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
           repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
 
-      - name: Sync required projects (minimal, clean)
+      - name: Sync required projects
         run: |
-          export PATH=~/bin:$PATH
           cd aosp10
           repo sync -c -j$(nproc) \
             build/make \
@@ -60,24 +64,21 @@ jobs:
             external/protobuf \
             external/googletest
 
-      - name: Fetch VNDK v28 (fix missing prebuilts)
+      - name: Fetch VNDK v28
         run: |
           cd aosp10
           git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 prebuilts/vndk/v28
 
-      - name: Force Go 1.13 into prebuilts/go
+      - name: Force Go 1.12.17 into prebuilts/go
         run: |
           cd aosp10
           rm -rf prebuilts/go
           mkdir -p prebuilts/go
-          GOROOT=$(go env GOROOT)
-          echo "Using Go from $GOROOT"
           ln -s $GOROOT prebuilts/go/linux-x86
           go version
 
-      - name: Build hidl-gen only (skip lunch)
+      - name: Build hidl-gen
         run: |
-          export PATH=~/bin:$PATH
           cd aosp10
           export ALLOW_MISSING_DEPENDENCIES=true
           export SOONG_ALLOW_MISSING_DEPENDENCIES=true
