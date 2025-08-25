@@ -41,6 +41,8 @@ jobs:
             build/make \
             build/soong \
             build/blueprint \
+            prebuilts/build-tools \
+            prebuilts/misc \
             system/core \
             system/tools/hidl \
             system/libhidl \
