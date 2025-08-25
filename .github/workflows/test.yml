@@ -15,78 +15,45 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y git-core gnupg flex bison build-essential \
-            zip curl zlib1g-dev gcc-multilib g++-multilib libc6-dev-i386 \
+            zip curl zlib1g-dev gcc-multilib g++-multilib \
             lib32ncurses5-dev x11proto-core-dev libx11-dev lib32z1-dev \
-            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig
+            libgl1-mesa-dev libxml2-utils xsltproc unzip fontconfig openjdk-11-jdk
 
-      - name: Setup Go 1.12.17 (required for AOSP 10 soong)
-        run: |
-          wget https://dl.google.com/go/go1.12.17.linux-amd64.tar.gz
-          tar -C $HOME -xzf go1.12.17.linux-amd64.tar.gz
-          mkdir -p $HOME/bin
-          mv $HOME/go $HOME/bin/go1.12.17
-          echo "GOROOT=$HOME/bin/go1.12.17" >> $GITHUB_ENV
-          echo "$HOME/bin/go1.12.17/bin" >> $GITHUB_PATH
-          go version
-
-      - name: Download repo tool
+      - name: Setup repo tool
         run: |
           mkdir -p ~/bin
           curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
           chmod a+x ~/bin/repo
-          echo "$HOME/bin" >> $GITHUB_PATH
+          echo "PATH=~/bin:$PATH" >> $GITHUB_ENV
 
-      - name: Init AOSP 10 repo (minimal)
+      - name: Sync AOSP 10 source
         run: |
-          mkdir -p aosp10 && cd aosp10
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
+          mkdir aosp10
+          cd aosp10
           repo init -u https://android.googlesource.com/platform/manifest -b android-10.0.0_r47
+          repo sync -c -j4
 
-      - name: Sync required projects
+      - name: Fix Go version (Go 1.12.17)
         run: |
-          cd aosp10
-          repo sync -c -j$(nproc) \
-            build/make \
-            build/soong \
-            build/blueprint \
-            prebuilts/build-tools \
-            prebuilts/misc \
-            prebuilts/sdk \
-            prebuilts/clang/host/linux-x86 \
-            system/core \
-            system/tools/hidl \
-            system/libhidl \
-            external/libcxx \
-            external/libchrome \
-            external/expat \
-            external/golang-protobuf \
-            external/protobuf \
-            external/googletest
+          cd aosp10/prebuilts
+          rm -rf go
+          git clone https://android.googlesource.com/platform/prebuilts/go -b android-10.0.0_r47 go
 
-      - name: Fetch VNDK v28
+      - name: Fix prebuilts/vndk/v28 (for AOSP 10)
         run: |
-          cd aosp10
-          git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 prebuilts/vndk/v28
+          cd aosp10/prebuilts
+          rm -rf vndk/v28
+          git clone https://android.googlesource.com/platform/prebuilts/vndk/v28 -b android-10.0.0_r47 vndk/v28
 
-      - name: Force Go 1.12.17 into prebuilts/go
+      - name: Fix prebuilts/clang (for AOSP 10)
         run: |
-          cd aosp10
-          rm -rf prebuilts/go
-          mkdir -p prebuilts/go
-          ln -s $GOROOT prebuilts/go/linux-x86
-          go version
+          cd aosp10/prebuilts
+          rm -rf clang
+          git clone https://android.googlesource.com/platform/prebuilts/clang -b android-10.0.0_r47 clang
 
       - name: Build hidl-gen
         run: |
           cd aosp10
-          export ALLOW_MISSING_DEPENDENCIES=true
-          export SOONG_ALLOW_MISSING_DEPENDENCIES=true
-          export WITHOUT_CHECK_API=true
-          build/soong/soong_ui.bash --make-mode hidl-gen
-
-      - name: Upload hidl-gen binary
-        uses: actions/upload-artifact@v4
-        with:
-          name: hidl-gen
-          path: aosp10/out/host/linux-x86/bin/hidl-gen
+          . build/envsetup.sh
+          lunch aosp_x86_64-eng
+          m hidl-gen
