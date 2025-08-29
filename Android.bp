@@ -1,12 +1,16 @@
 cc_binary {
     name: "overlay",
     srcs: ["overlay.cpp"],
+
     shared_libs: [
-        "libui",
         "libgui",
-        "libandroid",   // <-- thêm cái này
+        "libui",
+        "libandroid",
         "libutils",
         "liblog",
-        "libbinder",
+        "libcutils",
     ],
+
+    // Cho phép build cả bản ARM (target) lẫn bản chạy trên Linux (host)
+    host_supported: true,
 }
