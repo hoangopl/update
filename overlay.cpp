@@ -56,7 +56,6 @@ int main() {
     ANativeWindow_Buffer buf;
     ARect rect = {0, 0, width, height};
 
-    // Lock buffer
     if (ANativeWindow_lock(surface.get(), &buf, &rect) == 0) {
         uint32_t *pixels = (uint32_t *)buf.bits;
         for (int y = 0; y < height; y++) {
@@ -72,9 +71,18 @@ int main() {
     printf("✅ Overlay màu đỏ hiển thị trong 5 giây...\n");
     sleep(5);
 
-    // Xoá overlay
+    // Xoá overlay (tương thích nhiều version AOSP)
     SurfaceComposerClient::Transaction cleanup;
-    cleanup.remove(sc);
+
+    #if defined(__ANDROID_API__) && __ANDROID_API__ >= 29
+        // AOSP 10+ (API 29 trở lên) có remove()
+        cleanup.remove(sc);
+    #else
+        // AOSP cũ hơn: dùng hide + reparent
+        cleanup.hide(sc);
+        cleanup.reparent(sc, nullptr);
+    #endif
+
     cleanup.apply();
 
     return 0;
