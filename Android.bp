@@ -2,15 +2,11 @@ cc_binary {
     name: "overlay",
     srcs: ["overlay.cpp"],
     shared_libs: [
-        "libgui",
         "libui",
-        "libbinder",
+        "libgui",
+        "libandroid",   // <-- thêm cái này
         "libutils",
         "liblog",
-        "libEGL",
-    ],
-    cflags: [
-        "-Wall",
-        "-Werror",
+        "libbinder",
     ],
 }
