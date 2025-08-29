@@ -2,7 +2,7 @@
 # check_remove_scclient.sh
 # Script kiểm tra hàm remove() trong SurfaceComposerClient.h
 
-FILE="frameworks/native/include/gui/SurfaceComposerClient.h"
+FILE="aosp10/frameworks/native/include/gui/SurfaceComposerClient.h"
 
 if [ -f "$FILE" ]; then
     echo "📂 Found: $FILE"
