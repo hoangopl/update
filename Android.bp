@@ -9,8 +9,4 @@ cc_binary {
         "liblog",
         "libEGL",
     ],
-    cflags: [
-        "-Wall",
-        "-Werror",
-    ],
 }
