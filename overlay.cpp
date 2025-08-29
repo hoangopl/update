@@ -71,18 +71,10 @@ int main() {
     printf("✅ Overlay màu đỏ hiển thị trong 5 giây...\n");
     sleep(5);
 
-    // Xoá overlay (tương thích nhiều version AOSP)
+    // Xoá overlay (không dùng remove vì AOSP10 không có)
     SurfaceComposerClient::Transaction cleanup;
-
-    #if defined(__ANDROID_API__) && __ANDROID_API__ >= 29
-        // AOSP 10+ (API 29 trở lên) có remove()
-        cleanup.remove(sc);
-    #else
-        // AOSP cũ hơn: dùng hide + reparent
-        cleanup.hide(sc);
-        cleanup.reparent(sc, nullptr);
-    #endif
-
+    cleanup.hide(sc);
+    cleanup.reparent(sc, nullptr);
     cleanup.apply();
 
     return 0;
