@@ -1,18 +1,14 @@
 #!/bin/bash
-# open_scclient.sh
-# Script mở frameworks/native/include/gui/SurfaceComposerClient.h
+# check_remove_scclient.sh
+# Script kiểm tra hàm remove() trong SurfaceComposerClient.h
 
-FILE="aosp10/frameworks/native/include/gui/SurfaceComposerClient.h"
+FILE="frameworks/native/include/gui/SurfaceComposerClient.h"
 
 if [ -f "$FILE" ]; then
     echo "📂 Found: $FILE"
     echo "----------------------------------"
-    # In 30 dòng quanh Transaction class để kiểm tra remove()
-    grep -n "class Transaction" -A 30 "$FILE"
+    grep -n "remove" "$FILE" || echo "❌ Không tìm thấy hàm remove()"
     echo "----------------------------------"
-    echo "👉 Mở toàn bộ file bằng less..."
-    sleep 1
-    less "$FILE"
 else
     echo "❌ Không tìm thấy $FILE (có chắc bạn đang ở root AOSP không?)"
 fi
