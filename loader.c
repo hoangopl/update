@@ -1,41 +1,59 @@
-#include <linux/bpf.h>
-#include <sys/syscall.h>
+#include <stdio.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <string.h>
 #include <errno.h>
+#include <linux/bpf.h>
+#include <sys/syscall.h>
+#include <sys/mman.h>
 
 #define BPF_OBJ_FILE "/data/local/tmp/ebpf_prog_execve.o"
 
+// Helper syscall
+static int bpf_syscall(int cmd, union bpf_attr *attr, unsigned int size) {
+    return syscall(__NR_bpf, cmd, attr, size);
+}
+
 int main() {
-    int fd = open(BPF_OBJ_FILE, O_RDONLY);
+    int fd;
+    ssize_t n;
+    void *map;
+
+    // Mở file eBPF .o
+    fd = open(BPF_OBJ_FILE, O_RDONLY);
     if (fd < 0) {
         perror("open");
         return 1;
     }
 
-    char buf[4096];
-    ssize_t n = read(fd, buf, sizeof(buf));
+    // Đọc file vào bộ nhớ (đơn giản, thực tế cần parse ELF)
+    char buf[65536];
+    n = read(fd, buf, sizeof(buf));
     if (n <= 0) {
         perror("read");
         return 1;
     }
+    close(fd);
 
-    struct bpf_attr attr;
+    // Chuẩn bị bpf_attr (union)
+    union bpf_attr attr;
     memset(&attr, 0, sizeof(attr));
+
     attr.prog_type = BPF_PROG_TYPE_TRACEPOINT;
-    attr.insns = (uintptr_t)buf; // chỉ ví dụ, thực tế cần load ELF và parse section
+    attr.insns = (uintptr_t)buf;
     attr.insn_cnt = n / sizeof(struct bpf_insn);
     attr.license = (uintptr_t)"GPL";
 
-    int prog_fd = syscall(__NR_bpf, BPF_PROG_LOAD, &attr, sizeof(attr));
+    int prog_fd = bpf_syscall(BPF_PROG_LOAD, &attr, sizeof(attr));
     if (prog_fd < 0) {
-        perror("bpf prog load");
+        perror("BPF_PROG_LOAD failed");
         return 1;
     }
 
-    printf("eBPF program loaded, fd=%d\n", prog_fd);
-    sleep(999999);
+    printf("✅ eBPF program loaded, fd=%d\n", prog_fd);
+
+    // Giữ loader chạy để tracepoint ghi log
+    while (1) sleep(5);
+
     return 0;
 }
