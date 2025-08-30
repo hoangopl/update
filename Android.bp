@@ -1,24 +1,30 @@
+// build eBPF object
+cc_bpf {
+    name: "ebpf_prog_execve",
+    srcs: ["prog.c"],
+
+    bpf {
+        cflags: [
+            "-O2",
+            "-Wall",
+        ],
+    },
+}
+
+// build loader binary
 cc_binary {
-    name: "overlay",
-    srcs: ["overlay.cpp"],
+    name: "ebpf_loader",
+    srcs: ["loader.c"],
 
     shared_libs: [
-        "libgui",
-        "libui",
-        "libandroid",
-        "libutils",
-        "liblog",
-        "libcutils",
+        "libbpf",
+        "libc",
     ],
 
-    host_supported: false,
+    cflags: [
+        "-Wall",
+        "-O2",
+    ],
 
-    multilib: {
-        lib32: {
-            enabled: false,
-        },
-        lib64: {
-            enabled: true,
-        },
-    },
+    stl: "none",
 }
