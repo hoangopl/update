@@ -9,6 +9,13 @@ cc_binary {
         "liblog",
         "libcutils",
     ],
-    multilib: "64",        // <-- chỉ build 64-bit (arm64)
-    host_supported: true,  // tuỳ bạn có cần bản host hay không
+    multilib: {
+        lib64: {
+            // giữ mặc định, sẽ build ra ELF 64-bit
+        },
+        lib32: {
+            enabled: false,   // không build ELF 32-bit
+        },
+    },
+    host_supported: true,
 }
