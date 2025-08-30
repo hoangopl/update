@@ -5,7 +5,6 @@
 #include <errno.h>
 #include <linux/bpf.h>
 #include <sys/syscall.h>
-#include <sys/mman.h>
 
 #define BPF_OBJ_FILE "/data/local/tmp/ebpf_prog_execve.o"
 
@@ -15,22 +14,19 @@ static int bpf_syscall(int cmd, union bpf_attr *attr, unsigned int size) {
 }
 
 int main() {
-    int fd;
-    ssize_t n;
-    void *map;
-
     // Mở file eBPF .o
-    fd = open(BPF_OBJ_FILE, O_RDONLY);
+    int fd = open(BPF_OBJ_FILE, O_RDONLY);
     if (fd < 0) {
         perror("open");
         return 1;
     }
 
-    // Đọc file vào bộ nhớ (đơn giản, thực tế cần parse ELF)
+    // Đọc file vào bộ nhớ
     char buf[65536];
-    n = read(fd, buf, sizeof(buf));
+    ssize_t n = read(fd, buf, sizeof(buf));
     if (n <= 0) {
         perror("read");
+        close(fd);
         return 1;
     }
     close(fd);
@@ -38,9 +34,8 @@ int main() {
     // Chuẩn bị bpf_attr (union)
     union bpf_attr attr;
     memset(&attr, 0, sizeof(attr));
-
     attr.prog_type = BPF_PROG_TYPE_TRACEPOINT;
-    attr.insns = (uintptr_t)buf;
+    attr.insns = (uintptr_t)buf;  // demo, thực tế cần parse ELF
     attr.insn_cnt = n / sizeof(struct bpf_insn);
     attr.license = (uintptr_t)"GPL";
 
