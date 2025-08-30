@@ -1,7 +1,6 @@
 cc_binary {
     name: "overlay",
     srcs: ["overlay.cpp"],
-
     shared_libs: [
         "libgui",
         "libui",
@@ -10,7 +9,6 @@ cc_binary {
         "liblog",
         "libcutils",
     ],
-
-    // Cho phép build cả bản ARM (target) lẫn bản chạy trên Linux (host)
-    host_supported: true,
+    multilib: "64",        // <-- chỉ build 64-bit (arm64)
+    host_supported: true,  // tuỳ bạn có cần bản host hay không
 }
