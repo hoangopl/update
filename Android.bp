@@ -1,24 +1,29 @@
+// Biên dịch eBPF program thành object file .o
 bpf {
-    name: "prog",
+    name: "ebpf_prog_execve",
     srcs: ["prog.c"],
-    cflags: [
-        "-Wall",
-        "-O2",
-    ],
-    installable: true,
 }
 
+// Loader 64-bit, chạy trên Android
 cc_binary {
     name: "ebpf_loader",
     srcs: ["loader.c"],
+
     shared_libs: [
         "libbpf",
         "libc",
     ],
+
     cflags: [
         "-Wall",
         "-O2",
     ],
+
     stl: "none",
+
+    // chỉ build bản 64-bit (arm64)
+    compile_multilib: "64",
+
+    // cài vào /system/bin
     installable: true,
 }
