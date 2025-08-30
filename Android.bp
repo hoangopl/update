@@ -24,6 +24,6 @@ cc_binary {
     // chỉ build bản 64-bit (arm64)
     compile_multilib: "64",
 
-    // cài vào /system/bin
+    // chỉ cc_binary mới có installable
     installable: true,
 }
