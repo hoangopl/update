@@ -2,7 +2,6 @@ cc_binary {
     name: "overlay",
     srcs: ["overlay.cpp"],
 
-    // các lib cần để link
     shared_libs: [
         "libgui",
         "libui",
@@ -12,10 +11,8 @@ cc_binary {
         "libcutils",
     ],
 
-    // build target Android, không build host
     host_supported: false,
 
-    // ép build cho arm64, tắt hẳn 32-bit
     multilib: {
         lib32: {
             enabled: false,
