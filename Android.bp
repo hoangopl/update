@@ -1,30 +1,24 @@
-// build eBPF object
-cc_bpf {
-    name: "ebpf_prog_execve",
+bpf {
+    name: "prog",
     srcs: ["prog.c"],
-
-    bpf {
-        cflags: [
-            "-O2",
-            "-Wall",
-        ],
-    },
-}
-
-// build loader binary
-cc_binary {
-    name: "ebpf_loader",
-    srcs: ["loader.c"],
-
-    shared_libs: [
-        "libbpf",
-        "libc",
-    ],
-
     cflags: [
         "-Wall",
         "-O2",
     ],
+    installable: true,
+}
 
+cc_binary {
+    name: "ebpf_loader",
+    srcs: ["loader.c"],
+    shared_libs: [
+        "libbpf",
+        "libc",
+    ],
+    cflags: [
+        "-Wall",
+        "-O2",
+    ],
     stl: "none",
+    installable: true,
 }
