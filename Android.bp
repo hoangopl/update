@@ -1,25 +1,25 @@
-// Biên dịch eBPF program thành object file .o
-bpf {
-    name: "ebpf_prog_execve",
-    srcs: ["prog.c"],
-}
-
-// Loader 64-bit, chạy trên Android
 cc_binary {
-    name: "ebpf_loader",
-    srcs: ["loader.c"],
+    name: "overlay",
+    srcs: ["overlay.cpp"],
 
     shared_libs: [
-        "libc"
+        "libgui",
+        "libui",
+        "libandroid",
+        "libutils",
+        "liblog",
+        "libcutils",
+        "libbinder"
     ],
 
-    cflags: [
-        "-Wall",
-        "-O2",
-    ],
+    host_supported: false,
 
-    stl: "none",
-
-    // chỉ build bản 64-bit (arm64)
-    compile_multilib: "64",
+    multilib: {
+        lib32: {
+            enabled: false,
+        },
+        lib64: {
+            enabled: true,
+        },
+    },
 }
