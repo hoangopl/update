@@ -1,6 +1,7 @@
 cc_binary {
     name: "overlaydemo",
     srcs: ["overlaydemo.cpp"],
+
     shared_libs: [
         "libbinder",
         "libutils",
@@ -9,6 +10,17 @@ cc_binary {
         "libui",
         "libandroid",
     ],
+
     cflags: ["-Wno-unused-parameter"],
-    init_rc: ["overlaydemo.rc"],
+
+    host_supported: false,
+
+    multilib: {
+        lib32: {
+            enabled: false,
+        },
+        lib64: {
+            enabled: true,
+        },
+    },
 }
