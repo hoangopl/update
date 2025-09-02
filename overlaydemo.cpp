@@ -1,5 +1,5 @@
-// overlaydemo_red.cpp
-// Overlay màu đỏ 5s, dùng buffer surface (tương thích nhiều Android)
+// overlaydemo_fill.cpp
+// Overlay màu đỏ 5s, dùng buffer + ANativeWindow_lock (có setBufferSize)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,6 +19,7 @@
 #include <utils/StrongPointer.h>
 #include <utils/RefBase.h>
 #include <binder/IBinder.h>
+#include <android/native_window.h>
 
 using namespace android;
 
@@ -75,7 +76,7 @@ static int join_namespace(int pid, const char* nsname) {
 int main(int argc, char** argv) {
     install_segv_handler();
 
-    fprintf(stdout, "INFO: Starting overlaydemo_red (uid=%d,gid=%d)\n", getuid(), getgid());
+    fprintf(stdout, "INFO: Starting overlaydemo_fill (uid=%d,gid=%d)\n", getuid(), getgid());
 
     int pid = get_surface_flinger_pid();
     if (pid <= 0) { fprintf(stderr, "ERROR: cannot find surfaceflinger pid\n"); return -1; }
@@ -110,7 +111,6 @@ int main(int argc, char** argv) {
     int width = info.w, height = info.h;
     fprintf(stdout, "INFO: display %d x %d density=%f\n", width, height, info.density);
 
-    // ⚠️ Dùng eFXSurfaceBufferState thay vì eFXSurfaceColor
     sp<SurfaceControl> sc = client->createSurface(
         String8("RedOverlay"),
         width, height,
@@ -124,11 +124,38 @@ int main(int argc, char** argv) {
 
     SurfaceComposerClient::Transaction t;
     t.setLayer(sc, INT_MAX);
-    t.setColor(sc, half3{1.0f, 0.0f, 0.0f}); // fill đỏ
     t.show(sc);
     t.apply();
 
-    fprintf(stdout, "INFO: overlay shown, sleeping 5s\n");
+    sp<Surface> surface = sc->getSurface();
+    if (surface == nullptr) {
+        fprintf(stderr, "ERROR: getSurface null\n");
+        return -1;
+    }
+
+    // Bắt buộc set buffer size để Surface có buffer
+    ANativeWindow* window = surface.get();
+    native_window_set_buffers_geometry(window, width, height, PIXEL_FORMAT_RGBA_8888);
+
+    ANativeWindow_Buffer buf;
+    ARect rect = {0, 0, width, height};
+    int lock_res = ANativeWindow_lock(window, &buf, &rect);
+    fprintf(stdout, "INFO: ANativeWindow_lock returned %d stride=%d bits=%p\n", lock_res, buf.stride, buf.bits);
+    if (lock_res == 0 && buf.bits) {
+        uint32_t* pixels = (uint32_t*)buf.bits;
+        for (int y = 0; y < height; y++) {
+            uint32_t* row = pixels + y * buf.stride;
+            for (int x = 0; x < width; x++) {
+                row[x] = 0xFFFF0000; // ARGB: full đỏ
+            }
+        }
+        ANativeWindow_unlockAndPost(window);
+        fprintf(stdout, "INFO: posted buffer\n");
+    } else {
+        fprintf(stderr, "ERROR: cannot lock/post surface\n");
+    }
+
+    fprintf(stdout, "INFO: sleeping 5s\n");
     sleep(5);
 
     SurfaceComposerClient::Transaction cleanup;
