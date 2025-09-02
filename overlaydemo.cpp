@@ -1,5 +1,5 @@
 // overlaydemo_red.cpp
-// Tạo overlay đỏ toàn màn hình trong 5s (không ANativeWindow_lock)
+// Overlay màu đỏ 5s, dùng buffer surface (tương thích nhiều Android)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -110,11 +110,12 @@ int main(int argc, char** argv) {
     int width = info.w, height = info.h;
     fprintf(stdout, "INFO: display %d x %d density=%f\n", width, height, info.density);
 
+    // ⚠️ Dùng eFXSurfaceBufferState thay vì eFXSurfaceColor
     sp<SurfaceControl> sc = client->createSurface(
         String8("RedOverlay"),
         width, height,
         PIXEL_FORMAT_RGBA_8888,
-        ISurfaceComposerClient::eFXSurfaceColor
+        ISurfaceComposerClient::eFXSurfaceBufferState
     );
     if (sc == nullptr || !sc->isValid()) {
         fprintf(stderr, "ERROR: createSurface invalid\n");
@@ -123,7 +124,7 @@ int main(int argc, char** argv) {
 
     SurfaceComposerClient::Transaction t;
     t.setLayer(sc, INT_MAX);
-    t.setColor(sc, half3{1.0f, 0.0f, 0.0f}); // đỏ
+    t.setColor(sc, half3{1.0f, 0.0f, 0.0f}); // fill đỏ
     t.show(sc);
     t.apply();
 
