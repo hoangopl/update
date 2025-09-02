@@ -15,12 +15,5 @@ cc_binary {
 
     host_supported: false,
 
-    multilib: {
-        lib32: {
-            enabled: false,
-        },
-        lib64: {
-            enabled: true,
-        },
-    },
+    compile_multilib: "64",
 }
