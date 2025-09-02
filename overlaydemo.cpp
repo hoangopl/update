@@ -1,61 +1,86 @@
-#include <binder/ProcessState.h>
+#include <binder/IServiceManager.h>
 #include <gui/SurfaceComposerClient.h>
-#include <android/native_window.h>
+#include <gui/SurfaceControl.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/syscall.h>
+#include <sys/mount.h>
 #include <sched.h>
 #include <fcntl.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdlib>
+#include <iostream>
 
 using namespace android;
 
-int join_ipc_ns(pid_t target_pid) {
-    char path[128];
-    snprintf(path, sizeof(path), "/proc/%d/ns/ipc", target_pid);
-    int fd = open(path, O_RDONLY);
-    if (fd == -1) {
-        perror("open ns/ipc");
-        return -1;
-    }
-    if (setns(fd, 0) == -1) {
-        perror("setns");
-        close(fd);
-        return -1;
-    }
-    close(fd);
-    return 0;
-}
-
 int main() {
-    // join IPC namespace của system_server
-    pid_t sys_pid = system("pidof system_server > /tmp/sys_pid.txt");
-    FILE *fp = fopen("/tmp/sys_pid.txt", "r");
-    if (!fp) {
-        perror("pidof system_server");
-        return 1;
+    // Lấy pid surfaceflinger
+    FILE* fp = popen("pidof surfaceflinger", "r");
+    if (!fp) return -1;
+
+    char buf[32] = {0};
+    if (!fgets(buf, sizeof(buf), fp)) {
+        pclose(fp);
+        return -1;
     }
-    int pid;
-    fscanf(fp, "%d", &pid);
-    fclose(fp);
+    pclose(fp);
 
-    if (join_ipc_ns(pid) != 0) {
-        fprintf(stderr, "❌ Failed to join IPC namespace\n");
-        return 1;
+    pid_t sf_pid = atoi(buf);
+    if (sf_pid <= 0) return -1;
+
+    // Join IPC namespace của surfaceflinger
+    char ns_path[64];
+    snprintf(ns_path, sizeof(ns_path), "/proc/%d/ns/ipc", sf_pid);
+    int ns_fd = open(ns_path, O_RDONLY);
+    if (ns_fd >= 0) {
+        setns(ns_fd, 0);
+        close(ns_fd);
     }
-    printf("✅ Đã join IPC namespace của system_server (pid=%d)\n", pid);
 
-    // bắt đầu binder thread pool (quan trọng cho SurfaceComposerClient)
-    sp<ProcessState> proc(ProcessState::self());
-    proc->startThreadPool();
-
-    // tạo SurfaceComposerClient
+    // Kết nối SurfaceFlinger
     sp<SurfaceComposerClient> client = new SurfaceComposerClient();
     if (client->initCheck() != NO_ERROR) {
-        fprintf(stderr, "❌ Failed to create SurfaceComposerClient\n");
-        return 1;
+        ALOGE("Failed to init SurfaceComposerClient\n");
+        return -1;
     }
 
-    printf("✅ SurfaceComposerClient created thành công!\n");
+    sp<SurfaceControl> control = client->createSurface(
+        String8("RedOverlay"),
+        1080, 1920, PIXEL_FORMAT_RGBA_8888,
+        ISurfaceComposerClient::eOpaque);
+
+    if (control == nullptr) {
+        ALOGE("Failed to create surface\n");
+        return -1;
+    }
+
+    SurfaceComposerClient::Transaction t;
+    t.setLayer(control, INT_MAX)       // top layer
+     .show(control)
+     .setAlpha(control, 1.0f)
+     .apply();
+
+    sp<ANativeWindow> window = control->getSurface();
+    ANativeWindow_Buffer outBuffer;
+
+    if (window.get() != nullptr) {
+        for (int i = 0; i < 5; i++) {
+            if (ANativeWindow_lock(window.get(), &outBuffer, nullptr) == 0) {
+                uint32_t* pixels = (uint32_t*)outBuffer.bits;
+                for (int y = 0; y < outBuffer.height; y++) {
+                    for (int x = 0; x < outBuffer.width; x++) {
+                        pixels[y * (outBuffer.stride) + x] = 0xFFFF0000; // ARGB Red
+                    }
+                }
+                ANativeWindow_unlockAndPost(window.get());
+            }
+            sleep(1);
+        }
+    }
+
+    // Ẩn overlay sau 5 giây
+    SurfaceComposerClient::Transaction t2;
+    t2.hide(control).apply();
 
     return 0;
 }
