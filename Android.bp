@@ -11,8 +11,10 @@ cc_binary {
         "libandroid",
     ],
 
-    cflags: ["-Wno-unused-parameter"],
-
+    cflags: [
+             "-Wno-unused-parameter",
+             "-Wno-deprecated-declarations",
+  ],
     host_supported: false,
 
     compile_multilib: "64",
