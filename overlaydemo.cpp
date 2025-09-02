@@ -1,5 +1,6 @@
 // overlaydemo_debug.cpp
 // Nhận xét: giống bản trước, bổ sung setuid->1000, SIGSEGV handler + kiểm tra ANativeWindow
+// ĐÃ XOÁ execinfo
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -11,7 +12,6 @@
 #include <errno.h>
 #include <string.h>
 #include <signal.h>
-#include <execinfo.h>
 
 #include <ui/DisplayInfo.h>
 #include <gui/SurfaceComposerClient.h>
@@ -24,16 +24,8 @@
 
 using namespace android;
 
-static void print_backtrace() {
-    void *bt[32];
-    int n = backtrace(bt, 32);
-    fprintf(stderr, "BACKTRACE (frames=%d):\n", n);
-    backtrace_symbols_fd(bt, n, fileno(stderr));
-}
-
 static void segv_handler(int sig, siginfo_t *si, void *unused) {
     fprintf(stderr, "FATAL: signal %d at address %p\n", sig, si ? si->si_addr : NULL);
-    print_backtrace();
     _exit(128 + sig);
 }
 
@@ -64,6 +56,7 @@ static int get_surface_flinger_pid() {
     }
     return -1;
 }
+
 static int join_namespace(int pid, const char* nsname) {
     char path[128];
     snprintf(path, sizeof(path), "/proc/%d/ns/%s", pid, nsname);
