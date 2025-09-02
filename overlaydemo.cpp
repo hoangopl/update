@@ -1,5 +1,5 @@
 // overlaydemo_bufferlayer.cpp
-// Tạo GraphicBuffer, ghi màu đỏ, và setBuffer lên SurfaceControl (BufferLayer path).
+// Android 10: dùng GraphicBuffer (constructor 4 tham số) để vẽ overlay đỏ 5s
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -15,7 +15,6 @@
 #include <ui/DisplayInfo.h>
 #include <gui/SurfaceComposerClient.h>
 #include <gui/SurfaceControl.h>
-#include <gui/Surface.h>
 #include <ui/GraphicBuffer.h>
 #include <utils/StrongPointer.h>
 #include <utils/RefBase.h>
@@ -111,7 +110,7 @@ int main(int argc, char** argv) {
     int width = info.w, height = info.h;
     fprintf(stdout, "INFO: display %d x %d density=%f\n", width, height, info.density);
 
-    // Tạo SurfaceControl như trước
+    // Tạo SurfaceControl
     sp<SurfaceControl> sc = client->createSurface(
         String8("RedOverlayBuffer"),
         width, height,
@@ -123,49 +122,49 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    // Hiển thị layer (layer index cao)
     SurfaceComposerClient::Transaction t;
     t.setLayer(sc, INT_MAX);
     t.show(sc);
     t.apply();
 
-    // --- TẠO GraphicBuffer và ghi pixel đỏ ---
-    // Lưu ý: flags/usage có thể cần điều chỉnh tùy phiên bản/hw (GRALLOC_USAGE...)
-    uint32_t usage = GraphicBuffer::USAGE_SW_WRITE_OFTEN | GraphicBuffer::USAGE_HW_COMPOSER;
-    sp<GraphicBuffer> gb = new GraphicBuffer(width, height, PIXEL_FORMAT_RGBA_8888, usage, 1, GRALLOC_USAGE_SW_WRITE_OFTEN);
+    // --- Tạo GraphicBuffer (Android 10 vẫn hỗ trợ constructor 4 tham số) ---
+    sp<GraphicBuffer> gb = new GraphicBuffer(
+        width,
+        height,
+        PIXEL_FORMAT_RGBA_8888,
+        GraphicBuffer::USAGE_SW_WRITE_OFTEN | GraphicBuffer::USAGE_HW_COMPOSER
+    );
 
-    if (gb == nullptr) {
+    if (gb == nullptr || gb->initCheck() != NO_ERROR) {
         fprintf(stderr, "ERROR: cannot allocate GraphicBuffer\n");
-    } else {
-        void* vaddr = nullptr;
-        status_t r = gb->lock(GraphicBuffer::USAGE_SW_WRITE_OFTEN, &vaddr);
-        if (r != NO_ERROR || vaddr == nullptr) {
-            fprintf(stderr, "ERROR: GraphicBuffer lock failed: %d\n", r);
-        } else {
-            // stride: dùng getStride(); (độ dài dòng trong pixels)
-            int32_t stride = gb->getStride();
-            uint32_t* pixels = reinterpret_cast<uint32_t*>(vaddr);
-            for (int y = 0; y < height; y++) {
-                uint32_t* row = pixels + (size_t)y * (size_t)stride;
-                for (int x = 0; x < width; x++) {
-                    row[x] = 0xFFFF0000; // ARGB: full đỏ
-                }
-            }
-            gb->unlock();
+        return -1;
+    }
 
-            // Đẩy buffer lên SurfaceControl qua Transaction::setBuffer
-            SurfaceComposerClient::Transaction bufT;
-            bufT.setBuffer(sc, gb);
-            // Có thể setAcquireFence / release fence nếu cần (bỏ qua ở demo)
-            bufT.apply();
-            fprintf(stdout, "INFO: setBuffer with GraphicBuffer posted\n");
+    void* vaddr = nullptr;
+    status_t r = gb->lock(GraphicBuffer::USAGE_SW_WRITE_OFTEN, &vaddr);
+    if (r == NO_ERROR && vaddr) {
+        int32_t stride = gb->getStride();
+        uint32_t* pixels = reinterpret_cast<uint32_t*>(vaddr);
+        for (int y = 0; y < height; y++) {
+            uint32_t* row = pixels + (size_t)y * (size_t)stride;
+            for (int x = 0; x < width; x++) {
+                row[x] = 0xFFFF0000; // ARGB đỏ
+            }
         }
+        gb->unlock();
+
+        SurfaceComposerClient::Transaction bufT;
+        bufT.setBuffer(sc, gb);
+        bufT.apply();
+        fprintf(stdout, "INFO: buffer set and posted\n");
+    } else {
+        fprintf(stderr, "ERROR: GraphicBuffer lock failed\n");
     }
 
     fprintf(stdout, "INFO: sleeping 5s\n");
     sleep(5);
 
-    // cleanup: ẩn layer
+    // cleanup
     SurfaceComposerClient::Transaction cleanup;
     cleanup.hide(sc);
     cleanup.reparent(sc, nullptr);
