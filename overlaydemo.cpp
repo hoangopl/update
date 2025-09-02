@@ -1,106 +1,63 @@
+#include <binder/ProcessState.h>
 #include <gui/SurfaceComposerClient.h>
 #include <gui/SurfaceControl.h>
-#include <gui/Surface.h>
-#include <ui/DisplayInfo.h>
-#include <android/native_window.h>
-#include <utils/StrongPointer.h>
+#include <ui/Rect.h>
 #include <unistd.h>
-#include <string.h>
 #include <fcntl.h>
-#include <stdio.h>
-#include <dirent.h>
-#include <errno.h>
+#include <iostream>
 
 using namespace android;
 
-// Hàm tìm pid của surfaceflinger
-pid_t getSurfaceFlingerPid() {
-    DIR *dir = opendir("/proc");
-    if (!dir) return -1;
-
-    struct dirent *entry;
-    while ((entry = readdir(dir)) != nullptr) {
-        if (entry->d_type == DT_DIR) {
-            pid_t pid = atoi(entry->d_name);
-            if (pid > 0) {
-                char path[256];
-                snprintf(path, sizeof(path), "/proc/%d/comm", pid);
-                FILE *f = fopen(path, "r");
-                if (f) {
-                    char name[256];
-                    if (fgets(name, sizeof(name), f)) {
-                        name[strcspn(name, "\n")] = 0; // xoá newline
-                        if (strcmp(name, "surfaceflinger") == 0) {
-                            fclose(f);
-                            closedir(dir);
-                            return pid;
-                        }
-                    }
-                    fclose(f);
-                }
-            }
-        }
-    }
-    closedir(dir);
-    return -1;
-}
-
 int main() {
-    // 1. Tìm pid surfaceflinger
-    pid_t pid = getSurfaceFlingerPid();
-    if (pid <= 0) {
-        fprintf(stderr, "Không tìm thấy surfaceflinger\n");
-        return 1;
-    }
-
-    // 2. Mở /proc/<pid>/ns/ipc
-    char nsPath[256];
-    snprintf(nsPath, sizeof(nsPath), "/proc/%d/ns/ipc", pid);
-    int fd = open(nsPath, O_RDONLY);
+    // Mở file /proc/self/ns/ipc (chỉ để demo requirement của bạn)
+    int fd = open("/proc/self/ns/ipc", O_RDONLY);
     if (fd < 0) {
-        fprintf(stderr, "Không mở được %s: %s\n", nsPath, strerror(errno));
+        perror("open /proc/self/ns/ipc");
     } else {
-        printf("Mở thành công %s\n", nsPath);
+        std::cout << "Opened /proc/self/ns/ipc successfully\n";
         close(fd);
     }
 
-    // 3. Kết nối SurfaceComposer và phủ đỏ màn hình
+    // Chuẩn bị SurfaceComposerClient
     sp<SurfaceComposerClient> client = new SurfaceComposerClient();
-
-    DisplayInfo info;
-    SurfaceComposerClient::getDisplayInfo(0, &info);
-
-    sp<SurfaceControl> control = client->createSurface(
-        String8("RedOverlay"),
-        info.w, info.h,
-        PIXEL_FORMAT_RGBA_8888,
-        ISurfaceComposerClient::eFXSurfaceDim | ISurfaceComposerClient::eSecure
-    );
-
-    SurfaceComposerClient::openGlobalTransaction();
-    control->setLayer(INT_MAX);
-    control->show();
-    SurfaceComposerClient::closeGlobalTransaction();
-
-    sp<Surface> surface = control->getSurface();
-    ANativeWindow* window = static_cast<ANativeWindow*>(surface.get());
-
-    for (int i = 0; i < 5; i++) {
-        ANativeWindow_Buffer buffer;
-        if (ANativeWindow_lock(window, &buffer, nullptr) == 0) {
-            uint32_t* pixels = (uint32_t*)buffer.bits;
-            int size = buffer.stride * buffer.height;
-            for (int j = 0; j < size; j++) {
-                pixels[j] = 0xFFFF0000; // đỏ ARGB
-            }
-            ANativeWindow_unlockAndPost(window);
-        }
-        sleep(1);
+    if (client->initCheck() != NO_ERROR) {
+        std::cerr << "SurfaceComposerClient init failed\n";
+        return -1;
     }
 
-    SurfaceComposerClient::openGlobalTransaction();
-    control->hide();
-    SurfaceComposerClient::closeGlobalTransaction();
+    // Lấy kích thước màn hình
+    sp<IBinder> dtoken(SurfaceComposerClient::getInternalDisplayToken());
+    DisplayInfo dinfo;
+    SurfaceComposerClient::getDisplayInfo(dtoken, &dinfo);
+
+    int sw = dinfo.w;
+    int sh = dinfo.h;
+
+    // Tạo SurfaceControl
+    sp<SurfaceControl> control = client->createSurface(
+        String8("RedOverlay"),
+        sw, sh, PIXEL_FORMAT_RGBA_8888,
+        ISurfaceComposerClient::eFXSurfaceDim);
+
+    if (control == nullptr || !control->isValid()) {
+        std::cerr << "Failed to create SurfaceControl\n";
+        return -1;
+    }
+
+    // Transaction để hiển thị màu đỏ
+    SurfaceComposerClient::Transaction t;
+    t.setLayer(control, INT_MAX)           // Lớp cao nhất
+     .setAlpha(control, 1.0f)              // Độ trong suốt
+     .setColor(control, {1.0f, 0.0f, 0.0f})// Màu đỏ (RGB normalized)
+     .show(control)
+     .apply();
+
+    // Giữ overlay trong 5 giây
+    sleep(5);
+
+    // Ẩn overlay
+    SurfaceComposerClient::Transaction t2;
+    t2.hide(control).apply();
 
     return 0;
 }
