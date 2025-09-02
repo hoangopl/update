@@ -1,6 +1,5 @@
-// overlaydemo_debug.cpp
-// Nhận xét: giống bản trước, bổ sung setuid->1000, SIGSEGV handler + kiểm tra ANativeWindow
-// ĐÃ XOÁ execinfo
+// overlaydemo_red.cpp
+// Tạo overlay đỏ toàn màn hình trong 5s (không ANativeWindow_lock)
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -20,7 +19,6 @@
 #include <utils/StrongPointer.h>
 #include <utils/RefBase.h>
 #include <binder/IBinder.h>
-#include <android/native_window.h>
 
 using namespace android;
 
@@ -44,7 +42,6 @@ static int get_surface_flinger_pid() {
     char buf[256];
     if (!fgets(buf, sizeof(buf), fp)) { pclose(fp); return -1; }
     pclose(fp);
-    // trim newline
     size_t len = strlen(buf);
     if (len && buf[len-1]=='\n') buf[len-1]=0;
     char *tok = strtok(buf, " \t");
@@ -78,7 +75,7 @@ static int join_namespace(int pid, const char* nsname) {
 int main(int argc, char** argv) {
     install_segv_handler();
 
-    fprintf(stdout, "INFO: Starting redoverlay_debug (uid=%d,gid=%d)\n", getuid(), getgid());
+    fprintf(stdout, "INFO: Starting overlaydemo_red (uid=%d,gid=%d)\n", getuid(), getgid());
 
     int pid = get_surface_flinger_pid();
     if (pid <= 0) { fprintf(stderr, "ERROR: cannot find surfaceflinger pid\n"); return -1; }
@@ -88,7 +85,6 @@ int main(int argc, char** argv) {
     join_namespace(pid, "ipc");
     join_namespace(pid, "net");
 
-    // => IMPORTANT: switch to system (UID 1000) before binder calls
     if (setgid(1000) != 0) {
         fprintf(stderr, "WARN: setgid(1000) failed: %s\n", strerror(errno));
     }
@@ -114,45 +110,31 @@ int main(int argc, char** argv) {
     int width = info.w, height = info.h;
     fprintf(stdout, "INFO: display %d x %d density=%f\n", width, height, info.density);
 
-    sp<SurfaceControl> sc = client->createSurface(String8("RedOverlay"), width, height, PIXEL_FORMAT_RGBA_8888, ISurfaceComposerClient::eFXSurfaceBufferState);
-    if (sc == nullptr || !sc->isValid()) { fprintf(stderr, "ERROR: createSurface invalid\n"); return -1; }
+    sp<SurfaceControl> sc = client->createSurface(
+        String8("RedOverlay"),
+        width, height,
+        PIXEL_FORMAT_RGBA_8888,
+        ISurfaceComposerClient::eFXSurfaceColor
+    );
+    if (sc == nullptr || !sc->isValid()) {
+        fprintf(stderr, "ERROR: createSurface invalid\n");
+        return -1;
+    }
 
     SurfaceComposerClient::Transaction t;
     t.setLayer(sc, INT_MAX);
+    t.setColor(sc, half3{1.0f, 0.0f, 0.0f}); // đỏ
     t.show(sc);
     t.apply();
 
-    sp<Surface> surface = sc->getSurface();
-    if (surface == nullptr) { fprintf(stderr, "ERROR: getSurface null\n"); }
-    else {
-        ANativeWindow_Buffer buf;
-        ARect rect = {0,0,width,height};
-        int lock_res = ANativeWindow_lock(surface.get(), &buf, &rect);
-        fprintf(stdout, "INFO: ANativeWindow_lock returned %d stride=%d bits=%p\n", lock_res, buf.stride, buf.bits);
-        if (lock_res == 0 && buf.bits) {
-            // sanity checks
-            if (buf.stride <= 0 || buf.stride < width) {
-                fprintf(stderr, "WARN: suspicious stride %d (width=%d)\n", buf.stride, width);
-            }
-            uint32_t *pixels = (uint32_t*)buf.bits;
-            for (int y=0; y<height; y++) {
-                uint32_t *row = pixels + y * buf.stride;
-                for (int x=0; x<width; x++) row[x] = 0xFFFF0000;
-            }
-            ANativeWindow_unlockAndPost(surface.get());
-            fprintf(stdout, "INFO: posted buffer\n");
-        } else {
-            fprintf(stderr, "ERROR: cannot lock/post surface\n");
-        }
-    }
-
-    fprintf(stdout, "INFO: sleeping 5s\n");
+    fprintf(stdout, "INFO: overlay shown, sleeping 5s\n");
     sleep(5);
 
     SurfaceComposerClient::Transaction cleanup;
     cleanup.hide(sc);
     cleanup.reparent(sc, nullptr);
     cleanup.apply();
+
     fprintf(stdout, "INFO: exit.\n");
     return 0;
 }
