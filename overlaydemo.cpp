@@ -148,7 +148,7 @@ int main(int argc, char** argv) {
         for (int y = 0; y < height; y++) {
             uint32_t* row = pixels + (size_t)y * (size_t)stride;
             for (int x = 0; x < width; x++) {
-                row[x] = 0xFFFF0000; // ARGB đỏ
+                row[x] = 0xFF0000FF; // alpha=255, blue=255
             }
         }
         gb->unlock();
