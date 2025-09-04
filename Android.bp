@@ -1,6 +1,6 @@
 cc_binary {
-    name: "overlaydemo_vulkan",
-    srcs: ["overlaydemo_vulkan.cpp"],
+    name: "overlay_vulkan",
+    srcs: ["overlay_vulkan.cpp"],
 
     shared_libs: [
         "libvulkan",
