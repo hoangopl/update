@@ -14,6 +14,7 @@ cc_binary {
     cflags: [
         "-Wno-unused-parameter",
         "-Wno-unused-variable",
+        "-Wno-missing-field-initializers",
     ],
 //depzai
     host_supported: false,
