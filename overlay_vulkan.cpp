@@ -1,4 +1,5 @@
 #include <vulkan/vulkan.h>
+#include <vulkan/vulkan_android.h>
 #include <android/native_window.h>
 #include <gui/Surface.h>
 #include <gui/SurfaceComposerClient.h>
@@ -78,7 +79,7 @@ int main() {
     // ở đây bạn chọn physicalDevice, tạo logicalDevice, swapchain, cmdBuffer,
     // và ghi clear màu đỏ. Do Vulkan khá dài nên mình viết skeleton sẵn.
 
-    // ---- Đơn giản hóa: ngủ 5 giây rồi quít ----
+    // ---- Đơn giản hóa: ngủ 5 giây rồi  ----
     sleep(5);
 
     vkDestroySurfaceKHR(instance, surfaceKHR, nullptr);
