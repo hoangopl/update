@@ -4,13 +4,15 @@ cc_binary {
 
     shared_libs: [
         "liblog",
+        "libutils",
         "libandroid",
         "libgui",
         "libui",
-        "libutils",
-        "libbinder",
-        "libsurfaceflinger_headers", // nếu cần header nội bộ
         "libvulkan",
+    ],
+
+    header_libs: [
+        "libsurfaceflinger_headers",
     ],
 
     cflags: [
