@@ -19,4 +19,15 @@ cc_binary {
         "-Wall",
         "-Werror",
     ],
+
+    host_supported: false,
+
+    multilib: {
+        lib32: {
+            enabled: false,
+        },
+        lib64: {
+            enabled: true,
+        },
+    },
 }
