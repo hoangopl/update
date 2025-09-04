@@ -15,7 +15,7 @@ cc_binary {
         "-Wno-unused-parameter",
         "-Wno-unused-variable",
     ],
-
+//depzai
     host_supported: false,
 
     multilib: {
