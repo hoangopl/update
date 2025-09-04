@@ -1,25 +1,21 @@
 cc_binary {
-    name: "overlay_vulkan",
-    srcs: ["overlay_vulkan.cpp"],
+    name: "overlaydemo_vulkan",
+    srcs: ["overlaydemo_vulkan.cpp"],
 
     shared_libs: [
-        "liblog",
-        "libutils",
-        "libandroid",
-        "libgui",
-        "libui",
         "libvulkan",
-    ],
-
-    header_libs: [
-        "libsurfaceflinger_headers",
+        "libui",
+        "libgui",
+        "libandroid",
+        "libbinder",
+        "libutils",
     ],
 
     cflags: [
-    "-Wall",
-    "-Werror",
-    "-Wno-unused-parameter",
-],
+        "-Wno-unused-parameter",
+        "-Wno-unused-variable",
+    ],
+
     host_supported: false,
 
     multilib: {
