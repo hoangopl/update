@@ -1,7 +1,0 @@
-service overlaydemo /system/bin/overlaydemo
-    class late_start
-    user system
-    group system graphics
-    seclabel u:r:system_app:s0
-    disabled
-    oneshot
