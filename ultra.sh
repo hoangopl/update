@@ -13,13 +13,6 @@ if [ "$(id -u)" -ne 0 ]; then
   echo "Script này cần quyền root"
   exit 1
 fi
-mount -o remount,hidepid=2 /proc
-mount -o remount,rw /proc
-echo > /proc/kmsg 2>/dev/null
-resetprop ro.debuggable 0
-resetprop ro.secure 1
-resetprop init.svc.magisk ""
-resetprop persist.sys.root_access 0
 settings put global development_settings_enabled 0
 BUILD_PROP="/system/build.prop"
 mount -o remount,rw /system
