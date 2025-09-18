@@ -1,30 +1,4 @@
-#!/data/data/com.termux/files/usr/bin/bash  
-export HISTFILE=/dev/null
-unset HISTFILE
-unset HISTSIZE
-unset HISTFILESIZE
-RED='\e[1;31m'
-GREEN='\e[1;32m'
-YELLOW='\e[1;33m'
-BLUE='\e[1;34m'
-ORANGE='\033[38;5;208m'
-RESET='\e[0m'
-if [ "$(id -u)" -ne 0 ]; then
-  echo "Script này cần quyền root"
-  exit 1
-fi
-settings put global development_settings_enabled 0
-BUILD_PROP="/system/build.prop"
-mount -o remount,rw /system
-sed -i '/ro.product.model/d' "$BUILD_PROP"
-sed -i '/ro.hardware/d' "$BUILD_PROP"
-sed -i '/ro.kernel.qemu/d' "$BUILD_PROP"
-sed -i '/qemu.hw.mainkeys/d' "$BUILD_PROP"
-export PATH=$(echo "$PATH" | sed 's:/system/xbin::g' | sed 's:/system/bin::g')
-mount -o remount,rw /system
-rm -rf /system/bin/busybox
-rm -rf /system/xbin/busybox
-mount -o remount,ro /system
+#!/data/data/com.termux/files/usr/bin/bash
 export PATH=/data/data/com.termux/files/usr/bin:/system/bin:$PATH
 ipset create blacklist hash:ip -exist
 cmd notification post -S bigtext -t 'CHẾ ĐỘ:BẬT' 'Tag' 'ANTIBAN FREE FIRE' > /dev/null 2>&1
