@@ -1,4 +1,4 @@
-// Build eBPF object từ hook.c
+// eBPF object từ hook.c
 cc_object {
     name: "hook_bpf",
     srcs: ["hook.c"],
@@ -18,11 +18,11 @@ cc_object {
     host_supported: false,
 }
 
-// Build loader binary từ loader.c
+// Loader binary từ loader.c
 cc_binary {
     name: "loader",
     srcs: ["loader.c"],
-    cflags: [
+    clang_cflags: [
         "-Wall",
         "-Werror",
     ],
@@ -32,7 +32,6 @@ cc_binary {
     shared_libs: [
         "libbpf",
     ],
-    relative_install_path: "local/tmp", // sẽ thành /system/bin/local/tmp/loader
     strip: {
         none: true, // giữ symbol để debug
     },
