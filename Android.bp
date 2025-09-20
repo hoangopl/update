@@ -1,42 +1,24 @@
-// eBPF object từ hook.c
-cc_object {
-    name: "hook_bpf",
-    srcs: ["hook.c"],
-    clang_cflags: [
-        "-target", "bpf",
-        "-O2",
-        "-D__KERNEL__",
-    ],
-    local_include_dirs: [
-        "external/libbpf/include",
-    ],
-    arch: {
-        arm64: {
-            enabled: true,
-        },
-    },
-    host_supported: false,
-}
-
-// Loader binary từ loader.c
 cc_binary {
-    name: "loader",
-    srcs: ["loader.c"],
-    clang_cflags: [
-        "-Wall",
-        "-Werror",
-    ],
-    local_include_dirs: [
-        "external/libbpf/include",
-    ],
+    name: "overlay",
+    srcs: ["overlay.cpp"],
+
     shared_libs: [
-        "libbpf",
+        "libgui",
+        "libui",
+        "libandroid",
+        "libutils",
+        "liblog",
+        "libcutils",
+        "libbinder"
     ],
-    strip: {
-        none: true, // giữ symbol để debug
-    },
-    arch: {
-        arm64: {
+
+    host_supported: false,
+
+    multilib: {
+        lib32: {
+            enabled: false,
+        },
+        lib64: {
             enabled: true,
         },
     },
