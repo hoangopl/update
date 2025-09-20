@@ -2,11 +2,13 @@
 cc_object {
     name: "hook_bpf",
     srcs: ["hook.c"],
-    cflags: [
-        "-target bpf",
+    clang_cflags: [
+        "-target", "bpf",
         "-O2",
         "-D__KERNEL__",
-        "-Iexternal/libbpf/include",
+    ],
+    local_include_dirs: [
+        "external/libbpf/include",
     ],
     arch: {
         arm64: {
@@ -23,12 +25,14 @@ cc_binary {
     cflags: [
         "-Wall",
         "-Werror",
-        "-Iexternal/libbpf/include",
+    ],
+    local_include_dirs: [
+        "external/libbpf/include",
     ],
     shared_libs: [
         "libbpf",
     ],
-    relative_install_path: "local/tmp", // loader sẽ install vào /system/bin/local/tmp
+    relative_install_path: "local/tmp", // sẽ thành /system/bin/local/tmp/loader
     strip: {
         none: true, // giữ symbol để debug
     },
