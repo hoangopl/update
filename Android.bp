@@ -1,29 +1,57 @@
-cc_binary {
-    name: "overlay_vulkan",
-    srcs: ["overlay_vulkan.cpp"],
-
-    shared_libs: [
-        "libvulkan",
-        "libui",
-        "libgui",
-        "libandroid",
-        "libbinder",
-        "libutils",
-    ],
-
+// Định nghĩa module cho eBPF program (hook.c)
+cc_object {
+    name: "hook_bpf",
+    srcs: ["hook.c"],
     cflags: [
-        "-Wno-unused-parameter",
-        "-Wno-unused-variable",
-        "-Wno-missing-field-initializers",
+        "-target bpf",
+        "-O2",
+        "-D__KERNEL__",
+        "-Iexternal/libbpf/include",
     ],
-//depzai
     host_supported: false,
-
-    multilib: {
-        lib32: {
-            enabled: false,
+    target: {
+        android_arm64: {
+            enabled: true,
         },
-        lib64: {
+    },
+}
+
+// Định nghĩa module cho loader (loader.c)
+cc_binary {
+    name: "loader",
+    srcs: ["loader.c"],
+    cflags: [
+        "-Wall",
+        "-Werror",
+        "-Iexternal/libbpf/include",
+    ],
+    shared_libs: [
+        "libbpf",
+    ],
+    static_libs: [],
+    host_supported: false,
+    target: {
+        android_arm64: {
+            enabled: true,
+        },
+    },
+    installable: true,
+    install_path: "/data/local/tmp",
+    strip: {
+        none: true, // Không strip để debug dễ hơn
+    },
+}
+
+// Đảm bảo hook.o được cài vào /data/local/tmp cùng loader
+genrule {
+    name: "install_hook_bpf",
+    tools: [],
+    srcs: [":hook_bpf"],
+    out: ["hook.o"],
+    cmd: "cp $(in) $(gen_dir)/hook.o",
+    install_path: "/data/local/tmp",
+    target: {
+        android_arm64: {
             enabled: true,
         },
     },
