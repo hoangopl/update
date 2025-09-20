@@ -9,8 +9,8 @@ cc_object {
         "-Iexternal/libbpf/include",
     ],
     host_supported: false,
-    target: {
-        android_arm64: {
+    arch: {
+        arm64: {
             enabled: true,
         },
     },
@@ -28,30 +28,17 @@ cc_binary {
     shared_libs: [
         "libbpf",
     ],
-    static_libs: [],
-    host_supported: false,
-    target: {
-        android_arm64: {
-            enabled: true,
-        },
-    },
-    installable: true,
-    install_path: "/data/local/tmp",
+    // Không cần installable, Soong tự động cài nếu module là binary
+    data: [
+        ":hook_bpf", // Đảm bảo hook.o được copy vào /data/local/tmp
+    ],
+    // Cài vào /data/local/tmp
+    relative_install_path: "local/tmp",
     strip: {
         none: true, // Không strip để debug dễ hơn
     },
-}
-
-// Đảm bảo hook.o được cài vào /data/local/tmp cùng loader
-genrule {
-    name: "install_hook_bpf",
-    tools: [],
-    srcs: [":hook_bpf"],
-    out: ["hook.o"],
-    cmd: "cp $(in) $(gen_dir)/hook.o",
-    install_path: "/data/local/tmp",
-    target: {
-        android_arm64: {
+    arch: {
+        arm64: {
             enabled: true,
         },
     },
