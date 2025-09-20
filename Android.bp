@@ -1,4 +1,4 @@
-// Module eBPF program (hook.c)
+// Build eBPF object từ hook.c
 cc_object {
     name: "hook_bpf",
     srcs: ["hook.c"],
@@ -8,15 +8,15 @@ cc_object {
         "-D__KERNEL__",
         "-Iexternal/libbpf/include",
     ],
-    host_supported: false,
     arch: {
         arm64: {
             enabled: true,
         },
     },
+    host_supported: false,
 }
 
-// Module loader (loader.c)
+// Build loader binary từ loader.c
 cc_binary {
     name: "loader",
     srcs: ["loader.c"],
@@ -28,7 +28,7 @@ cc_binary {
     shared_libs: [
         "libbpf",
     ],
-    relative_install_path: "local/tmp",
+    relative_install_path: "local/tmp", // loader sẽ install vào /system/bin/local/tmp
     strip: {
         none: true, // giữ symbol để debug
     },
@@ -37,12 +37,4 @@ cc_binary {
             enabled: true,
         },
     },
-}
-
-// Genrule copy hook.o sang thư mục output
-genrule {
-    name: "install_hook_bpf",
-    srcs: [":hook_bpf"],
-    out: ["hook.o"],
-    cmd: "cp $(in) $(genDir)/hook.o",
 }
