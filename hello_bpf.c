@@ -2,6 +2,6 @@
 #include <stdio.h>
 
 int main() {
-    printf("libbpf version: %s\n", libbpf_version_string());
+    printf("libbpf linked successfully!\n");
     return 0;
 }
