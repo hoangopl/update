@@ -1,4 +1,4 @@
-// Module cho eBPF program
+// Module cho eBPF program (hook.c)
 cc_bpf {
     name: "hook_bpf",
     srcs: ["hook.c"],
@@ -6,18 +6,24 @@ cc_bpf {
         "-O2",
         "-g",
     ],
+    arch: {
+        arm64: {},   // chỉ build cho arm64
+    },
 }
 
-// Module cho user-space loader
+// Module cho user-space loader (loader.c)
 cc_binary {
     name: "loader",
     srcs: ["loader.c"],
     shared_libs: [
-        "libbpf", // nếu bạn đã import libbpf vào tree
+        "libbpf", // hoặc module libbpf mà bạn đã thêm vào AOSP
     ],
     cflags: [
         "-O2",
         "-g",
     ],
     installable: true,
+    arch: {
+        arm64: {},   // chỉ build cho arm64
+    },
 }
