@@ -1,21 +1,23 @@
-cc_binary {
-    name: "overlay",
-    srcs: ["overlay.cpp"],
-
-    shared_libs: [
-        "libbinder",
-        "libutils",
-        "libcutils",
-        "libgui",
-        "libui",
-        "libandroid",
+// Module cho eBPF program
+cc_bpf {
+    name: "hook_bpf",
+    srcs: ["hook.c"],
+    bpf_cflags: [
+        "-O2",
+        "-g",
     ],
+}
 
+// Module cho user-space loader
+cc_binary {
+    name: "loader",
+    srcs: ["loader.c"],
+    shared_libs: [
+        "libbpf", // nếu bạn đã import libbpf vào tree
+    ],
     cflags: [
-             "-Wno-unused-parameter",
-             "-Wno-deprecated-declarations",
-  ],
-    host_supported: false,
-
-    compile_multilib: "64",
+        "-O2",
+        "-g",
+    ],
+    installable: true,
 }
