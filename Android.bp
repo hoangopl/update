@@ -17,7 +17,7 @@ cc_binary {
     name: "loader",
     srcs: ["loader.c"],
     shared_libs: [
-        "libbpf_upstream",  // bạn phải có module libbpf trong AOSP
+        "libbpf",  // bạn phải có module libbpf trong AOSP
     ],
     cflags: [
         "-O2",
