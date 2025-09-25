@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.10)
+project(fake_libmain)
+
+# tạo shared lib với tên "main" -> output sẽ là libmain.so
+add_library(main SHARED wrapper.cpp)
+
+find_library(log-lib log)
+target_link_libraries(main ${log-lib})
