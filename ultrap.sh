@@ -221,7 +221,6 @@ iptables -F OUTPUT > /dev/null 2>&1
 iptables -F INPUT > /dev/null 2>&1
 iptables -A INPUT -p icmp -j DROP > /dev/null 2>&1
 iptables -A OUTPUT -p icmp -j DROP > /dev/null 2>&1
-iptables -A INPUT -i lo -j DROP > /dev/null 2>&1
 while true; do
     echo -ne "${GREEN}Chọn phiên bản Free Fire (32/64): ${RESET}"
     read ff_version
